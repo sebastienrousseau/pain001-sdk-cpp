@@ -1,0 +1,16 @@
+# CMake and local build output
+build/
+build-*/
+cmake-build-*/
+_deps/
+compile_commands.json
+CMakeCache.txt
+CMakeFiles/
+Testing/
+# Editors and OS
+.cache/
+.vscode/
+.idea/
+.DS_Store
+# Example output
+*.out.xml
