@@ -1,0 +1,7 @@
+5203f5835892e1a0132ea48e0abee007a8bdb484698bc51a6e1e69527a8062ea  README.md
+f1d871b2b8def8f80c726bbeedf0c1288ac505f4a01a1e03096007c43c8f9c0a  cases.json
+2e285ce1a9242d9bb2f9f6802efcbedc16b59ba9c9a78816c2dd9af92efc8c7e  fixtures/bad-iban.pain.001.001.09.csv
+42bdf77b3bab819c205b21c2db1b7ba65edc2c023a216ebbca69a8e16434571f  fixtures/credit-transfer.pain.001.001.09.csv
+011305c87aed871b56a8726a2882afa650bea4e72fd7a64e5a1858bcdded02e1  fixtures/credit-transfer.pain.001.001.09.xml
+30e208f150d8ed7724b4cce091e2848c5841bf6a8cb90a181bef659f91f7fe79  fixtures/direct-debit.pain.008.001.08.csv
+14e7c01319d885a08829e34d6990d92c06c0a6419cbe8b2479a718bc514ee315  openapi.json
