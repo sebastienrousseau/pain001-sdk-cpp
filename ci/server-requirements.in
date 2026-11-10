@@ -1,0 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0 OR MIT
+# The server the conformance job runs against. Compile with:
+#   uv pip compile --generate-hashes --python-version 3.12 --python-platform linux ci/server-requirements.in -o ci/server-requirements.txt
+pain001[api]==0.0.85
