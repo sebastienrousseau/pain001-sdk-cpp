@@ -54,3 +54,21 @@ payments itself.
 | **Plain-text transport** | `http://` is accepted for loopback development; use `https://` elsewhere, as the API key and payment data travel in the request. |
 | **Malformed responses** | A 2xx body that is not JSON or lacks a required field raises `TransportError`; nothing is read past the JSON parser. |
 | **Dependency CVEs** | libcurl comes from the system; nlohmann/json and GoogleTest are fetched from release archives pinned by SHA-256. |
+
+### Dependency audit
+
+The SDK has three dependencies, and no automated advisory scan covers
+them, because none comes from a package registry that an audit tool
+reads:
+
+| Dependency | How it is obtained | How advisories are tracked |
+| :--- | :--- | :--- |
+| libcurl | The system package (`libcurl4-openssl-dev` in CI) | The operating system's security updates; CI installs the current Ubuntu 24.04 package on every run. |
+| nlohmann/json `3.12.0` | Release archive, `URL_HASH SHA256` in `CMakeLists.txt` | By hand: its GitHub security advisories are reviewed before a release or a pin bump. |
+| GoogleTest `1.18.0` (tests only) | Release archive, `URL_HASH SHA256` in `tests/CMakeLists.txt` | By hand, as above; it is never linked into the library. |
+
+Dependabot has no CMake `FetchContent` ecosystem, so it cannot propose
+updates for the two archives; it does track the workflow actions and
+the hash-pinned server requirements in `ci/`. A changed upstream
+archive fails the CMake configure step on its SHA-256 instead of
+building.
