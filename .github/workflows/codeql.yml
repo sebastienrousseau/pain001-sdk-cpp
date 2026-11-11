@@ -50,7 +50,29 @@ jobs:
       - name: Build
         run: make build
 
+      # The tests fetch GoogleTest into build/_deps and compile it, so
+      # CodeQL analyses it too. paths-ignore has no effect on compiled
+      # languages, so its results are dropped from the SARIF before upload;
+      # the library, tests and example stay analysed.
       - name: Analyse
         uses: github/codeql-action/analyze@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
         with:
+          category: "/language:c-cpp"
+          upload: never
+          output: sarif-results
+
+      - name: Drop results in fetched third-party sources
+        run: |
+          set -euo pipefail
+          for f in sarif-results/*.sarif; do
+            jq '.runs[].results |= map(select(
+                  (.locations[0].physicalLocation.artifactLocation.uri // "")
+                  | startswith("build/_deps/") | not))' "$f" > "$f.tmp"
+            mv "$f.tmp" "$f"
+          done
+
+      - name: Upload
+        uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
+        with:
+          sarif_file: sarif-results
           category: "/language:c-cpp"
