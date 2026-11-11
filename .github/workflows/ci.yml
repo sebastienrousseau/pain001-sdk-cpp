@@ -126,8 +126,8 @@ jobs:
 
       - name: Example against the server
         run: |
-          build/pain001_basic conformance/fixtures/credit-transfer.pain.001.001.09.csv \
-            "$RUNNER_TEMP/payments.out.xml"
+          build/pain001_basic < conformance/fixtures/credit-transfer.pain.001.001.09.csv \
+            > "$RUNNER_TEMP/payments.out.xml"
           grep -q '<NbOfTxs>5</NbOfTxs>' "$RUNNER_TEMP/payments.out.xml"
 
       - name: Server log

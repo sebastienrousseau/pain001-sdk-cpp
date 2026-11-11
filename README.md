@@ -242,10 +242,12 @@ from the environment; the library itself reads no environment variables.
 
 ## Examples
 
-- [`examples/basic.cpp`](examples/basic.cpp): generate
-  `payments.out.xml` from the kit's synthetic credit-transfer CSV against
-  `PAIN001_BASE_URL`. Built as `build/pain001_basic`; CI runs it against a
-  live server and checks the output has five transactions.
+- [`examples/basic.cpp`](examples/basic.cpp): reads a payments CSV on
+  stdin and writes the pain.001.001.09 XML to stdout, against
+  `PAIN001_BASE_URL`. Built as `build/pain001_basic`
+  (`build/pain001_basic < payments.csv > payments.xml`); CI runs it
+  against a live server on the kit's synthetic credit-transfer CSV and
+  checks the output has five transactions.
 
 ---
 

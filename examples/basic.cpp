@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 //
-// Generate a pain.001.001.09 file from the conformance kit's synthetic
-// credit-transfer CSV.
+// Generate a pain.001.001.09 file from a payments CSV.
 //
-//   basic [input.csv] [output.xml]
+//   basic < payments.csv > payments.xml
 //
-// Defaults: conformance/fixtures/credit-transfer.pain.001.001.09.csv and
-// payments.out.xml. The server is PAIN001_BASE_URL (default
+// The CSV comes from stdin and the XML goes to stdout; messages go to
+// stderr. The example opens no file itself, so the shell decides what it
+// reads and writes. The server is PAIN001_BASE_URL (default
 // http://127.0.0.1:8000); PAIN001_API_KEY is sent when set.
 
 #include <cstdlib>
-#include <fstream>
 #include <iostream>
 #include <iterator>
+#include <stdexcept>
 #include <string>
 
 #include "pain001/client.hpp"
@@ -34,28 +34,25 @@ pain001::ClientOptions options_from_env() {
   return options;
 }
 
-std::string read_text(const std::string& path) {
-  std::ifstream in(path, std::ios::binary);
-  if (!in) {
-    throw std::runtime_error("cannot read " + path);
+std::string read_stdin() {
+  std::string text{std::istreambuf_iterator<char>{std::cin}, std::istreambuf_iterator<char>{}};
+  if (text.empty()) {
+    throw std::runtime_error("no CSV on stdin (usage: basic < payments.csv > payments.xml)");
   }
-  return std::string(std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>());
+  return text;
 }
 
-int run(int argc, char** argv) {
-  const std::string input =
-      argc > 1 ? argv[1] : "conformance/fixtures/credit-transfer.pain.001.001.09.csv";
-  const std::string output = argc > 2 ? argv[2] : "payments.out.xml";
+int run() {
   try {
     pain001::Client client(options_from_env());
     const pain001::GenerateResponse result =
-        client.generate(read_text(input), "payments.csv", pain001::message_type::kPain00100109);
+        client.generate(read_stdin(), "payments.csv", pain001::message_type::kPain00100109);
     if (!result.success || !result.xml) {
       std::cerr << "generation failed: " << result.message << '\n';
       return 1;
     }
-    std::ofstream(output, std::ios::binary) << result.xml.value();
-    std::cout << result.message << ": wrote " << output << '\n';
+    std::cout << result.xml.value();
+    std::cerr << result.message << '\n';
     return 0;
   } catch (const pain001::ApiError& error) {
     // The detail names the failing rows and columns; print it locally only.
@@ -68,9 +65,9 @@ int run(int argc, char** argv) {
 
 }  // namespace
 
-int main(int argc, char** argv) {
+int main() {
   try {
-    return run(argc, argv);
+    return run();
   } catch (...) {
     return 2;  // printing the error itself failed
   }
