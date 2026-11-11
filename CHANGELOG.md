@@ -30,4 +30,4 @@ The first release will be 0.0.86, with pain001 0.0.86.
 - CMake build (nlohmann/json 3.12.0 and GoogleTest 1.18.0 by
   `FetchContent`, pinned by SHA-256), a `make check` gate, CI with lint,
   GCC and sanitizer builds and a conformance job against a hash-pinned
-  `pain001[api]==0.0.85` server.
+  `pain001[api]==0.0.86` server.

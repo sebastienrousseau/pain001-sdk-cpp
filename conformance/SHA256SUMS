@@ -4,4 +4,4 @@ f1d871b2b8def8f80c726bbeedf0c1288ac505f4a01a1e03096007c43c8f9c0a  cases.json
 42bdf77b3bab819c205b21c2db1b7ba65edc2c023a216ebbca69a8e16434571f  fixtures/credit-transfer.pain.001.001.09.csv
 011305c87aed871b56a8726a2882afa650bea4e72fd7a64e5a1858bcdded02e1  fixtures/credit-transfer.pain.001.001.09.xml
 30e208f150d8ed7724b4cce091e2848c5841bf6a8cb90a181bef659f91f7fe79  fixtures/direct-debit.pain.008.001.08.csv
-4d42cc56edace44b2414dfca2419c36efe79e0febc64bce0bec6d7d21406ca9f  openapi.json
+d8a06b330ffb0d03eccfbb69032f9a1cd4ee870cd7bde5b687e70bde38d495cc  openapi.json
