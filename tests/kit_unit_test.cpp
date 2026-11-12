@@ -133,7 +133,7 @@ TEST(Kit, HasUniqueCaseIds) {
   for (const auto& kit_case : cases()) {
     EXPECT_TRUE(ids.insert(kit_case.at("id").get<std::string>()).second);
   }
-  EXPECT_GE(ids.size(), 10U);
+  EXPECT_GE(ids.size(), 14U);
 }
 
 TEST(Sha256, MatchesTheFipsVectors) {
