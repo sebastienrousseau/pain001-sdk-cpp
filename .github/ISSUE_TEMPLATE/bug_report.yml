@@ -14,14 +14,14 @@ body:
     id: version
     attributes:
       label: SDK version or commit
-      placeholder: "0.0.86"
+      placeholder: "0.0.87"
     validations:
       required: true
   - type: input
     id: server_version
     attributes:
       label: pain001 server version (GET /api/v1/health)
-      placeholder: "0.0.86"
+      placeholder: "0.0.87"
     validations:
       required: true
   - type: input

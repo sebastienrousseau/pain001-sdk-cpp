@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0 OR MIT
 cmake_minimum_required(VERSION 3.20)
 
-project(pain001_sdk VERSION 0.0.86 DESCRIPTION "C++ client for the pain001 REST API" LANGUAGES CXX)
+project(pain001_sdk VERSION 0.0.87 DESCRIPTION "C++ client for the pain001 REST API" LANGUAGES CXX)
 
 include(FetchContent)
 

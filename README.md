@@ -76,7 +76,7 @@ target_link_libraries(your_app PRIVATE pain001::sdk)
 ```
 
 The package is not yet on a registry (vcpkg, Conan) and has no tagged
-release: the first will be 0.0.86, in lockstep with the pain001 suite.
+release: the first will be 0.0.87, in lockstep with the pain001 suite.
 Until then, pin a commit. `add_subdirectory` on a checkout works the same
 way. Tests and examples build only when this is the top-level project.
 

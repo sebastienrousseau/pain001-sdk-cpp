@@ -7,7 +7,7 @@
 This package follows the [`pain001`](https://github.com/sebastienrousseau/pain001)
 suite cadence. While pre-`1.0`, the latest released `0.0.x` receives
 security fixes; older `0.0.x` versions do not. No version is released
-yet; the first will be `0.0.86`.
+yet; the first will be `0.0.87`.
 
 | Version | Status | Receives security fixes? |
 | :--- | :--- | :--- |
