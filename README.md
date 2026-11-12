@@ -117,6 +117,11 @@ int main() {
     const auto result =
         client.generate(csv.str(), "payments.csv", pain001::message_type::kPain00100109);
     std::cout << result.message << '\n' << result.xml.value_or("") << '\n';
+  } catch (const pain001::GenerationRefused& refused) {  // 422: rows or scheme rules failed
+    for (const auto& row : refused.response().validation_errors) {
+      std::cerr << row.field << ": " << row.message << '\n';
+    }
+    return 1;
   } catch (const pain001::ApiError& error) {
     std::cerr << error.status() << ' ' << error.detail().dump() << '\n';
     return 1;
@@ -129,9 +134,12 @@ int main() {
 
 Start the server first with `pain001 serve --host 127.0.0.1 --port 8000`.
 `generate` posts the CSV text to `POST /api/v1/ui/generate` and returns a
-`GenerateResponse` whose `xml` holds the pain.001.001.09 document. A row
-the server rejects (here, a bad IBAN check digit) comes back as an
-`ApiError` with status 400 and the server's explanation in `detail()`.
+`GenerateResponse` whose `xml` holds the pain.001.001.09 document. When
+rows fail validation or a scheme rule, the server answers 422 and
+`generate` throws `GenerationRefused` (an `ApiError`): its `response()`
+holds the decoded body, with the findings in `validation_errors` and
+`scheme_violations`. An input file the server refuses outright comes
+back as an `ApiError` with status 400 and the explanation in `detail()`.
 
 ---
 
@@ -162,7 +170,7 @@ runs it in CI against a live server, so they agree on behaviour.
 | Checking | `check()`: an XML document through XSD, MDR, scheme and Schematron rungs | Supported |
 | Faces | `faces()` and `project_face()`: a pain.001 document to Berlin Group, ISO 2018 names or UK Open Banking JSON, with a loss report | Supported |
 | Raw calls | `request()`: any method and path, status and JSON body back | Supported |
-| Errors | Non-2xx as `ApiError` with `status()`, `detail()` and decoded 422 items | Supported |
+| Errors | Non-2xx as `ApiError` with `status()`, `detail()` and decoded 422 items; a refused generate as `GenerationRefused` with the findings | Supported |
 | Async jobs | `/api/v1/generate/async`, `/status`, `/download` | Through `request()` only |
 | Retries | Automatic retry on failure | Not provided, by design |
 
@@ -215,6 +223,9 @@ See [`docs/BENCHMARKS.md`](docs/BENCHMARKS.md) for methodology and full results.
 - **Errors.** `pain001::Error` is the base (a `std::runtime_error`).
   `ApiError` carries the HTTP status and the parsed `detail` (a string,
   or an array for 422, decodable with `validation_errors()`).
+  `GenerationRefused`, an `ApiError` with status 422, is what `generate`
+  throws when the server refuses the data; `response()` is the decoded
+  `GenerateResponse` with `validation_errors` and `scheme_violations`.
   `TransportError` covers no response and malformed 2xx bodies. Bad
   options throw `std::invalid_argument`.
 - **RAII around libcurl.** The easy handle and header lists are owned by

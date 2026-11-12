@@ -147,9 +147,8 @@ struct HealthResponse {
 
 /// One rejected input row: the column, what is wrong with it, and the
 /// offending value (any JSON value, null when absent). The kit's
-/// openapi.json snapshot at kit_version 1 names this shape
-/// `ValidationError`, colliding with FastAPI's request-error model; core
-/// renamed it `RowError`, which is the shape the server sends.
+/// openapi.json names this shape `RowError` (kit_version 1 called it
+/// `ValidationError`, colliding with FastAPI's request-error model).
 struct RowError {
   std::string field;
   std::string message;
@@ -166,7 +165,9 @@ struct ValidationResponse {
   std::vector<nlohmann::json> scheme_violations;
 };
 
-/// `POST /api/v1/ui/generate`.
+/// `POST /api/v1/ui/generate`. A returned response always carries the
+/// XML; when the server refuses the data (HTTP 422, `success: false`),
+/// `Client::generate` throws GenerationRefused with this body instead.
 struct GenerateResponse {
   bool success = false;
   std::string message;
@@ -174,6 +175,23 @@ struct GenerateResponse {
   std::optional<std::string> xml;
   std::vector<RowError> validation_errors;
   std::vector<nlohmann::json> scheme_violations;
+};
+
+/// The server refused to generate a file (HTTP 422 with `success:
+/// false`): rows failed validation or a scheme rule. `status()` stays
+/// 422, `detail()` holds the whole body (it has no `detail` field), and
+/// `response()` holds that body decoded, with the findings in
+/// `validation_errors` and `scheme_violations`. A 422 for a malformed
+/// request (FastAPI's `detail` array) stays a plain ApiError.
+class GenerationRefused : public ApiError {
+ public:
+  GenerationRefused(long status, nlohmann::json detail, GenerateResponse response);
+
+  /// The refusal body decoded.
+  [[nodiscard]] const GenerateResponse& response() const noexcept { return response_; }
+
+ private:
+  GenerateResponse response_;
 };
 
 /// One problem one rung of `check` found.

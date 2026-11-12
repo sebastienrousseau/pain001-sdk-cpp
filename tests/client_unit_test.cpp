@@ -164,17 +164,64 @@ TEST(Decoding, ValidationDefaultsAndRowErrors) {
   EXPECT_TRUE(out.scheme_violations.empty());
 }
 
-TEST(Decoding, GenerateRowErrors) {
+TEST(Decoding, GenerateRefusalCarriesRowErrors) {
   const auto state = std::make_shared<FakeState>();
-  const std::string reply = R"({"success":false,"message":"invalid","xml":null,
-    "validation_errors":[{"field":"currency","message":"not ISO 4217","value":null}]})";
-  Client client = fake_client(state, {{200, reply}});
-  const GenerateResponse out = client.generate("c", "f.csv", "pain.001.001.09");
-  EXPECT_FALSE(out.success);
-  EXPECT_FALSE(out.xml.has_value());
-  ASSERT_EQ(out.validation_errors.size(), 1U);
-  EXPECT_EQ(out.validation_errors[0].field, "currency");
-  EXPECT_TRUE(out.validation_errors[0].value.is_null());
+  const std::string reply = R"({"success":false,"message":"Validation failed","xml":null,
+    "validation_errors":[{"field":"$.currency","message":"not ISO 4217","value":"EURO"}],
+    "scheme_violations":[]})";
+  Client client = fake_client(state, {{422, reply}});
+  try {
+    static_cast<void>(client.generate("c", "f.csv", "pain.001.001.09"));
+    FAIL() << "expected GenerationRefused";
+  } catch (const GenerationRefused& error) {
+    const ApiError& base = error;
+    EXPECT_EQ(base.status(), 422);
+    EXPECT_TRUE(base.validation_errors().empty());
+    const GenerateResponse& out = error.response();
+    EXPECT_FALSE(out.success);
+    EXPECT_FALSE(out.xml.has_value());
+    EXPECT_EQ(out.message, "Validation failed");
+    ASSERT_EQ(out.validation_errors.size(), 1U);
+    EXPECT_EQ(out.validation_errors[0].field, "$.currency");
+    EXPECT_EQ(out.validation_errors[0].value, json("EURO"));
+    EXPECT_TRUE(out.scheme_violations.empty());
+  }
+}
+
+TEST(Decoding, GenerateRefusalCarriesSchemeViolations) {
+  const auto state = std::make_shared<FakeState>();
+  const std::string reply = R"({"success":false,"message":"Scheme rules failed","xml":null,
+    "validation_errors":[],"scheme_violations":[{"rule":"UK-CHAPS-PURP","severity":"error",
+    "field":"purpose_code"}]})";
+  Client client = fake_client(state, {{422, reply}});
+  try {
+    static_cast<void>(client.generate("c", "f.csv", "pain.001.001.09", "uk-chaps"));
+    FAIL() << "expected GenerationRefused";
+  } catch (const GenerationRefused& error) {
+    EXPECT_EQ(error.status(), 422);
+    ASSERT_EQ(error.response().scheme_violations.size(), 1U);
+    EXPECT_EQ(error.response().scheme_violations[0].at("rule"), "UK-CHAPS-PURP");
+  }
+}
+
+TEST(Decoding, GenerateRequestErrorStaysAPlainApiError) {
+  const auto state = std::make_shared<FakeState>();
+  const std::string reply =
+      R"({"detail":[{"loc":["body","message_type"],"msg":"bad","type":"enum"}]})";
+  Client client = fake_client(state, {{422, reply},
+                                      {400, R"({"detail":"bad file"})"},
+                                      {422, R"({"success":"no"})"},
+                                      {422, R"({"success":false,"validation_errors":1})"}});
+  for (const long status : {422L, 400L, 422L, 422L}) {
+    try {
+      static_cast<void>(client.generate("c", "f.csv", "pain.999.001.01"));
+      FAIL() << "expected ApiError";
+    } catch (const GenerationRefused&) {
+      FAIL() << "HTTP " << status << " without success:false is not a refusal";
+    } catch (const ApiError& error) {
+      EXPECT_EQ(error.status(), status);
+    }
+  }
 }
 
 TEST(Decoding, CheckWithFindings) {

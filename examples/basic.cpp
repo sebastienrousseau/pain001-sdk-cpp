@@ -47,13 +47,19 @@ int run() {
     pain001::Client client(options_from_env());
     const pain001::GenerateResponse result =
         client.generate(read_stdin(), "payments.csv", pain001::message_type::kPain00100109);
-    if (!result.success || !result.xml) {
-      std::cerr << "generation failed: " << result.message << '\n';
-      return 1;
-    }
-    std::cout << result.xml.value();
+    std::cout << result.xml.value_or("");
     std::cerr << result.message << '\n';
     return 0;
+  } catch (const pain001::GenerationRefused& refused) {
+    // Rows or scheme rules failed; print the findings locally only.
+    const pain001::GenerateResponse& response = refused.response();
+    std::cerr << response.message << '\n';
+    for (const auto& row : response.validation_errors) {
+      std::cerr << row.field << ": " << row.message << '\n';
+    }
+    for (const auto& violation : response.scheme_violations) {
+      std::cerr << violation.dump() << '\n';
+    }
   } catch (const pain001::ApiError& error) {
     // The detail names the failing rows and columns; print it locally only.
     std::cerr << error.what() << ": " << error.detail().dump() << '\n';

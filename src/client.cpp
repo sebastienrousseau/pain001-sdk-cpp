@@ -93,6 +93,34 @@ json parse_body(const HttpResponse& response) {
   return parsed;
 }
 
+// Throws GenerationRefused when a generate reply is the 422 refusal
+// body (a JSON object with `success: false`); otherwise returns.
+void throw_if_refused(const HttpResponse& response) {
+  if (response.status != 422) {
+    return;
+  }
+  const json parsed = json::parse(response.body, nullptr, false);
+  if (!parsed.is_object() || parsed.find("success") == parsed.end() ||
+      parsed.at("success") != false) {
+    return;
+  }
+  GenerateResponse decoded;
+  try {
+    decoded = parsed.get<GenerateResponse>();
+  } catch (const json::exception&) {
+    return;  // not the documented shape: the caller raises a plain ApiError
+  }
+  throw GenerationRefused(response.status, parsed, std::move(decoded));
+}
+
+// The parsed body of a 2xx reply; ApiError for any other status.
+json success_body(const HttpResponse& response) {
+  if (response.status < 200 || response.status >= 300) {
+    throw ApiError(response.status, error_detail(response.body));
+  }
+  return parse_body(response);
+}
+
 template <typename T>
 T decode(const json& document) {
   try {
@@ -117,6 +145,9 @@ ApiError::ApiError(long status, nlohmann::json detail)
     : Error("pain001 API returned HTTP " + std::to_string(status)),
       status_(status),
       detail_(std::move(detail)) {}
+
+GenerationRefused::GenerationRefused(long status, nlohmann::json detail, GenerateResponse response)
+    : ApiError(status, std::move(detail)), response_(std::move(response)) {}
 
 std::vector<ValidationError> ApiError::validation_errors() const {
   if (!detail_.is_array()) {
@@ -164,11 +195,7 @@ HttpResponse Client::send(std::string_view method, std::string_view path,
 }
 
 json Client::call(std::string_view method, std::string_view path, const std::optional<json>& body) {
-  const HttpResponse response = send(method, path, body);
-  if (response.status < 200 || response.status >= 300) {
-    throw ApiError(response.status, error_detail(response.body));
-  }
-  return parse_body(response);
+  return success_body(send(method, path, body));
 }
 
 Response Client::request(std::string_view method, std::string_view path,
@@ -192,7 +219,9 @@ GenerateResponse Client::generate(std::string_view content, std::string_view fil
                                   std::string_view message_type,
                                   const std::optional<std::string>& scheme) {
   const json body = file_payload(content, filename, message_type, scheme);
-  return decode<GenerateResponse>(call("POST", "/api/v1/ui/generate", body));
+  const HttpResponse response = send("POST", "/api/v1/ui/generate", body);
+  throw_if_refused(response);
+  return decode<GenerateResponse>(success_body(response));
 }
 
 CheckResponse Client::check(std::string_view xml, const std::optional<std::string>& scheme,

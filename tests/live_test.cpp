@@ -97,6 +97,34 @@ TEST_F(Live, GenerateDirectDebit) {
             std::string::npos);
 }
 
+TEST_F(Live, GenerateRefusedRowsRaisesGenerationRefused) {
+  try {
+    static_cast<void>(client().generate(fixture("bad-currency.pain.001.001.09.csv"), "payments.csv",
+                                        message_type::kPain00100109));
+    FAIL() << "expected GenerationRefused";
+  } catch (const GenerationRefused& error) {
+    EXPECT_EQ(error.status(), 422);
+    EXPECT_FALSE(error.response().success);
+    EXPECT_FALSE(error.response().xml.has_value());
+    ASSERT_FALSE(error.response().validation_errors.empty());
+    EXPECT_EQ(error.response().validation_errors[0].field, "$.currency");
+    EXPECT_EQ(error.response().validation_errors[0].value, "EURO");
+  }
+}
+
+TEST_F(Live, GenerateRefusedSchemeRaisesGenerationRefused) {
+  try {
+    static_cast<void>(client().generate(fixture("chaps-no-purpose.pain.001.001.09.csv"),
+                                        "payments.csv", message_type::kPain00100109, "uk-chaps"));
+    FAIL() << "expected GenerationRefused";
+  } catch (const GenerationRefused& error) {
+    EXPECT_EQ(error.status(), 422);
+    EXPECT_TRUE(error.response().validation_errors.empty());
+    ASSERT_FALSE(error.response().scheme_violations.empty());
+    EXPECT_EQ(error.response().scheme_violations[0].at("rule"), "UK-CHAPS-PURP");
+  }
+}
+
 TEST_F(Live, CheckValidDocument) {
   const CheckResponse out = client().check(fixture("credit-transfer.pain.001.001.09.xml"));
   EXPECT_TRUE(out.passed);
