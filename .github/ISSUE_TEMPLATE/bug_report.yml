@@ -1,0 +1,65 @@
+# SPDX-License-Identifier: Apache-2.0 OR MIT
+name: Bug Report
+description: Report a reproducible problem in pain001-sdk-cpp
+title: "[Bug]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Issues are public. Use synthetic payment data only: no real
+        account numbers, names or API keys. Report security problems
+        privately, as SECURITY.md describes.
+  - type: input
+    id: version
+    attributes:
+      label: SDK version or commit
+      placeholder: "0.0.87"
+    validations:
+      required: true
+  - type: input
+    id: server_version
+    attributes:
+      label: pain001 server version (GET /api/v1/health)
+      placeholder: "0.0.87"
+    validations:
+      required: true
+  - type: input
+    id: toolchain
+    attributes:
+      label: Compiler, CMake and libcurl versions
+      placeholder: "g++ 13.3, CMake 3.28, libcurl 8.5.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating System
+      options:
+        - Linux
+        - macOS
+        - Windows
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What happened and what did you expect instead?
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Minimal Reproducible Example
+      render: cpp
+    validations:
+      required: true
+  - type: textarea
+    id: error_output
+    attributes:
+      label: Error Output
+      description: The exception type, ApiError::status() and detail(), or compiler output.
+    validations:
+      required: true

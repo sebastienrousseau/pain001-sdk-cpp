@@ -1,0 +1,135 @@
+# SPDX-License-Identifier: Apache-2.0 OR MIT
+#
+# Lint (clang-format, file size, clang-tidy with the complexity
+# ceilings), build and unit tests on GCC and Clang (Clang with ASan and
+# UBSan), and the conformance kit against a live `pain001 serve`.
+name: CI
+
+on:
+  push:
+    branches: [main, "feat/*"]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Format, file size and clang-tidy
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      CXX: clang++-18
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install libcurl headers
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libcurl4-openssl-dev
+
+      - name: Tool versions
+        run: |
+          cmake --version
+          clang-format-18 --version
+          clang-tidy-18 --version
+
+      - name: Format and file size
+        run: make format-check filesize CLANG_FORMAT=clang-format-18
+
+      - name: clang-tidy (bugprone, performance, complexity ceilings)
+        run: make tidy CLANG_TIDY=clang-tidy-18
+
+  build:
+    name: Build and unit tests (${{ matrix.name }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: gcc
+            cxx: g++
+            flags: ""
+          - name: clang-sanitizers
+            cxx: clang++-18
+            flags: "-fsanitize=address,undefined -fno-sanitize-recover=undefined"
+    env:
+      CXX: ${{ matrix.cxx }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install libcurl headers
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libcurl4-openssl-dev
+
+      - name: Build with warnings as errors, run the tests
+        env:
+          FLAGS: ${{ matrix.flags }}
+        run: |
+          make test CMAKE_ARGS="-DCMAKE_CXX_FLAGS='$FLAGS' -DCMAKE_EXE_LINKER_FLAGS='$FLAGS'"
+
+      - name: The example was built
+        run: test -x build/pain001_basic
+
+  conformance:
+    name: Conformance kit against pain001 serve
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      PAIN001_BASE_URL: http://127.0.0.1:8000
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
+
+      - name: Install the server (hash-pinned)
+        run: |
+          python -m venv "$RUNNER_TEMP/server"
+          "$RUNNER_TEMP/server/bin/pip" install --require-hashes --no-deps \
+            -r ci/server-requirements.txt
+          "$RUNNER_TEMP/server/bin/pain001" --version
+
+      - name: Start pain001 serve
+        run: |
+          cd "$RUNNER_TEMP"
+          nohup "$RUNNER_TEMP/server/bin/pain001" serve --host 127.0.0.1 --port 8000 \
+            > "$RUNNER_TEMP/server.log" 2>&1 &
+          for _ in $(seq 1 60); do
+            if curl -fsS "$PAIN001_BASE_URL/api/v1/health"; then exit 0; fi
+            sleep 1
+          done
+          cat "$RUNNER_TEMP/server.log"
+          exit 1
+
+      - name: Install libcurl headers
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libcurl4-openssl-dev
+
+      - name: Conformance cases and typed tests (fail on any skip)
+        run: make conformance
+
+      - name: Example against the server
+        run: |
+          build/pain001_basic < conformance/fixtures/credit-transfer.pain.001.001.09.csv \
+            > "$RUNNER_TEMP/payments.out.xml"
+          grep -q '<NbOfTxs>5</NbOfTxs>' "$RUNNER_TEMP/payments.out.xml"
+
+      - name: Server log
+        if: failure()
+        run: cat "$RUNNER_TEMP/server.log"

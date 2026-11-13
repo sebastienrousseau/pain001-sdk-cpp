@@ -1,0 +1,43 @@
+# SPDX-License-Identifier: Apache-2.0 OR MIT
+name: Feature Request
+description: Suggest an enhancement for pain001-sdk-cpp
+title: "[Feature]: "
+labels: ["enhancement", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The SDK is a thin client: payment logic lives in the pain001
+        server. A new capability usually starts as a server endpoint in
+        https://github.com/sebastienrousseau/pain001.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+    validations:
+      required: true
+  - type: textarea
+    id: use_case
+    attributes:
+      label: Real-World Use Case
+    validations:
+      required: true
+  - type: dropdown
+    id: breaking_change
+    attributes:
+      label: Breaking Change?
+      options:
+        - "No"
+        - "Yes"
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered

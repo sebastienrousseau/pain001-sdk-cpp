@@ -1,0 +1,28 @@
+// SPDX-License-Identifier: Apache-2.0 OR MIT
+{
+  // Markdown style for the docs-lint job. Kept permissive on length and
+  // HTML because the README uses centred HTML headers; the rules that
+  // remain catch real defects.
+  "config": {
+    "default": true,
+    "MD013": false,
+    "MD033": false,
+    "MD041": false,
+    "MD024": { "siblings_only": true },
+    "MD029": false,
+    "MD036": false,
+    "MD040": false,
+    "MD046": false,
+    "MD049": false,
+    "MD050": false
+  },
+  "ignores": [
+    "node_modules/**",
+    "build/**",
+    "build-*/**",
+    "cmake-build-*/**",
+    "_deps/**",
+    "CHANGELOG.md",
+    "conformance/**"
+  ]
+}

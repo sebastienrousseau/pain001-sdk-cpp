@@ -1,0 +1,12 @@
+# SPDX-License-Identifier: Apache-2.0 OR MIT
+blank_issues_enabled: true
+contact_links:
+  - name: Documentation
+    url: https://github.com/sebastienrousseau/pain001-sdk-cpp/blob/main/README.md
+    about: Read the README before opening an issue.
+  - name: Contributing Guide
+    url: https://github.com/sebastienrousseau/pain001-sdk-cpp/blob/main/CONTRIBUTING.md
+    about: Follow contribution and review expectations.
+  - name: Server behaviour
+    url: https://github.com/sebastienrousseau/pain001/issues
+    about: Problems with validation or generation results belong to the pain001 core.

@@ -1,0 +1,78 @@
+# SPDX-License-Identifier: Apache-2.0 OR MIT
+#
+# CodeQL static analysis of the C++ sources. Build mode is manual: the
+# library, tests and example are compiled with the repository's own
+# CMake build, so CodeQL sees the exact translation units CI ships.
+name: CodeQL
+
+on:
+  push:
+    branches: [main, "feat/**"]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "0 3 * * 1" # weekly, Monday 03:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: codeql-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  analyze:
+    name: CodeQL (c-cpp)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      security-events: write # upload results to code scanning
+      actions: read
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install libcurl headers
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libcurl4-openssl-dev
+
+      - name: Initialise CodeQL
+        uses: github/codeql-action/init@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
+        with:
+          languages: c-cpp
+          build-mode: manual
+          queries: security-extended
+
+      - name: Build
+        run: make build
+
+      # The tests fetch GoogleTest into build/_deps and compile it, so
+      # CodeQL analyses it too. paths-ignore has no effect on compiled
+      # languages, so its results are dropped from the SARIF before upload;
+      # the library, tests and example stay analysed.
+      - name: Analyse
+        uses: github/codeql-action/analyze@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
+        with:
+          category: "/language:c-cpp"
+          upload: never
+          output: sarif-results
+
+      - name: Drop results in fetched third-party sources
+        run: |
+          set -euo pipefail
+          for f in sarif-results/*.sarif; do
+            jq '.runs[].results |= map(select(
+                  (.locations[0].physicalLocation.artifactLocation.uri // "")
+                  | startswith("build/_deps/") | not))' "$f" > "$f.tmp"
+            mv "$f.tmp" "$f"
+          done
+
+      - name: Upload
+        uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
+        with:
+          sarif_file: sarif-results
+          category: "/language:c-cpp"

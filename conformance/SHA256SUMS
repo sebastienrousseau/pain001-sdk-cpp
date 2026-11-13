@@ -1,0 +1,10 @@
+de1cc848133c489b280a4e17919807ffb2dd0d77c86df23a43fd90fd65978caf  README.md
+1844f2c0dca73e0c216fd93be58990c3b2bdc8641fc6c7caf49ccfc77c377036  cases.json
+58d62e7f73a94331247d5dbce9b05d89aadaefa9863400872a40416014e72e0c  fixtures/bad-currency.pain.001.001.09.csv
+2e285ce1a9242d9bb2f9f6802efcbedc16b59ba9c9a78816c2dd9af92efc8c7e  fixtures/bad-iban.pain.001.001.09.csv
+4be912a2c6b8d236872f519b2d1a58559ff75fbcef697a6432399fda94f3d022  fixtures/bad-lei.pain.001.001.09.csv
+59467dbd244ce92ef5325025bea3cbd4eca352febbb04f8968e5b06e231bc447  fixtures/chaps-no-purpose.pain.001.001.09.csv
+42bdf77b3bab819c205b21c2db1b7ba65edc2c023a216ebbca69a8e16434571f  fixtures/credit-transfer.pain.001.001.09.csv
+011305c87aed871b56a8726a2882afa650bea4e72fd7a64e5a1858bcdded02e1  fixtures/credit-transfer.pain.001.001.09.xml
+30e208f150d8ed7724b4cce091e2848c5841bf6a8cb90a181bef659f91f7fe79  fixtures/direct-debit.pain.008.001.08.csv
+71b7140ddff4d2635f9288389722bc20b35f5d410183e38616c6f42e0f82fd30  openapi.json
