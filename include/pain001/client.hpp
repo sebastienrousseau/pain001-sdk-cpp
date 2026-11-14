@@ -114,10 +114,17 @@ struct HttpRequest {
   std::chrono::milliseconds timeout{0};
 };
 
-/// The status and raw body of an HTTP response.
+/// The status, raw body and headers of an HTTP response.
 struct HttpResponse {
   long status = 0;
   std::string body;
+  /// Response headers in the order received, names as the server sent
+  /// them. A Transport that does not collect headers leaves this empty.
+  std::vector<std::pair<std::string, std::string>> headers{};
+
+  /// The value of the first header named `name` (ASCII case-insensitive),
+  /// or nullopt.
+  [[nodiscard]] std::optional<std::string> header(std::string_view name) const;
 };
 
 /// Sends HTTP requests. The default is libcurl; tests substitute a double.

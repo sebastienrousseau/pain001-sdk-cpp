@@ -16,6 +16,8 @@ add_executable(
   conformance_test.cpp
   kit_unit_test.cpp
   live_test.cpp
+  transport_test.cpp
+  support/http_server.cpp
   support/kit.cpp
   support/sha256.cpp)
 target_include_directories(pain001_sdk_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})

@@ -24,6 +24,19 @@ bool starts_with(std::string_view text, std::string_view prefix) {
   return text.substr(0, prefix.size()) == prefix;
 }
 
+bool iequals(std::string_view a, std::string_view b) {
+  if (a.size() != b.size()) {
+    return false;
+  }
+  for (std::size_t i = 0; i < a.size(); ++i) {
+    if (std::tolower(static_cast<unsigned char>(a[i])) !=
+        std::tolower(static_cast<unsigned char>(b[i]))) {
+      return false;
+    }
+  }
+  return true;
+}
+
 ClientOptions checked(ClientOptions options) {
   if (!starts_with(options.base_url, "http://") && !starts_with(options.base_url, "https://")) {
     throw std::invalid_argument("base_url must start with http:// or https://");
@@ -140,6 +153,15 @@ json file_payload(std::string_view content, std::string_view filename,
 }
 
 }  // namespace
+
+std::optional<std::string> HttpResponse::header(std::string_view name) const {
+  for (const auto& [key, value] : headers) {
+    if (iequals(key, name)) {
+      return value;
+    }
+  }
+  return std::nullopt;
+}
 
 ApiError::ApiError(long status, nlohmann::json detail)
     : Error("pain001 API returned HTTP " + std::to_string(status)),

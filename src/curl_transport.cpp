@@ -10,7 +10,9 @@
 #include <cstddef>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <utility>
+#include <vector>
 
 #include "pain001/client.hpp"
 
@@ -48,6 +50,33 @@ using ErrorBuffer = std::array<char, CURL_ERROR_SIZE>;
 std::size_t write_body(char* data, std::size_t size, std::size_t count, void* user) {
   auto* out = static_cast<std::string*>(user);
   out->append(data, size * count);
+  return size * count;
+}
+
+using Headers = std::vector<std::pair<std::string, std::string>>;
+
+// Optional whitespace around a header value (RFC 9110, section 5.5).
+std::string_view trim(std::string_view text) {
+  const auto first = text.find_first_not_of(" \t\r\n");
+  if (first == std::string_view::npos) {
+    return {};
+  }
+  return text.substr(first, text.find_last_not_of(" \t\r\n") - first + 1);
+}
+
+// One header line per call. A status line starts a new response (after
+// an interim 100 Continue), so the headers collected so far are dropped;
+// the blank line that ends the block has no colon and is skipped.
+std::size_t write_header(char* data, std::size_t size, std::size_t count, void* user) {
+  auto* out = static_cast<Headers*>(user);
+  const std::string_view line(data, size * count);
+  const auto colon = line.find(':');
+  if (line.substr(0, 5) == "HTTP/") {
+    out->clear();
+  } else if (colon != std::string_view::npos) {
+    out->emplace_back(std::string(line.substr(0, colon)),
+                      std::string(trim(line.substr(colon + 1))));
+  }
   return size * count;
 }
 
@@ -119,12 +148,15 @@ class CurlTransport final : public Transport {
     curl_easy_reset(handle);
     ErrorBuffer error{};
     std::string body;
+    Headers received;
     const HeaderList headers = build_headers(request);
     set_common(handle, request, error);
     set_method(handle, request);
     set_option(handle, CURLOPT_HTTPHEADER, headers.get());
     set_option(handle, CURLOPT_WRITEFUNCTION, &write_body);
     set_option(handle, CURLOPT_WRITEDATA, static_cast<void*>(&body));
+    set_option(handle, CURLOPT_HEADERFUNCTION, &write_header);
+    set_option(handle, CURLOPT_HEADERDATA, static_cast<void*>(&received));
     const CURLcode code = curl_easy_perform(handle);
     if (code != CURLE_OK) {
       const std::string reason = error[0] != '\0' ? error.data() : curl_easy_strerror(code);
@@ -132,7 +164,7 @@ class CurlTransport final : public Transport {
     }
     long status = 0;
     curl_easy_getinfo(handle, CURLINFO_RESPONSE_CODE, &status);
-    return HttpResponse{status, std::move(body)};
+    return HttpResponse{status, std::move(body), std::move(received)};
   }
 
  private:

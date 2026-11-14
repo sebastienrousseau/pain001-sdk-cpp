@@ -295,12 +295,6 @@ TEST(Options, ClientIsMovable) {
   EXPECT_TRUE(second.faces().empty());
 }
 
-TEST(CurlTransport, ReportsAConnectionFailure) {
-  // Port 9 on loopback (discard) is closed on CI runners and dev machines.
-  Client client({"http://127.0.0.1:9", std::nullopt, std::chrono::seconds(5)});
-  EXPECT_THROW(static_cast<void>(client.health()), TransportError);
-}
-
 }  // namespace
 }  // namespace pain001
 
