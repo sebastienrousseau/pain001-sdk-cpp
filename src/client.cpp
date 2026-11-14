@@ -42,7 +42,8 @@ ClientOptions checked(ClientOptions options) {
   if (!starts_with(options.base_url, "http://") && !starts_with(options.base_url, "https://")) {
     throw std::invalid_argument("base_url must start with http:// or https://");
   }
-  while (!options.base_url.empty() && options.base_url.back() == '/') {
+  // Never empties the URL: it starts with "http://" or "https://".
+  while (options.base_url.back() == '/') {
     options.base_url.pop_back();
   }
   if (options.api_key &&
