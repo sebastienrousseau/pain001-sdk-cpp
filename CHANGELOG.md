@@ -52,6 +52,12 @@ The first release will be 0.0.86, with pain001 0.0.86.
 
 ### Fixed
 
+- `generate` returned a `GenerateResponse` without the XML when a 2xx
+  reply had `success` not true or no `xml`, against the header's promise
+  that a returned response always carries it. It now throws the new
+  `NoDocument` (a `TransportError`), as the Go SDK returns
+  `ErrNoDocument` and the Rust SDK `Error::Decode`. The fuzz targets now
+  check the promise.
 - A count in a response (`total_rows`, `valid_rows`, `invalid_rows`,
   `errors`, `warnings`, and the `LossReport` counts) that does not fit
   `std::int64_t` is now a `TransportError` ("unexpected shape"). Before,

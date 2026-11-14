@@ -117,7 +117,13 @@ inline void exercise_every_call(long status, const std::string& body) {
   Client client = client_answering(status, body);
   expect_documented([&] { static_cast<void>(client.health()); }, status, false);
   expect_documented([&] { static_cast<void>(client.validate("c", "f.csv", "p")); }, status, false);
-  expect_documented([&] { static_cast<void>(client.generate("c", "f.csv", "p")); }, status, true);
+  expect_documented(
+      [&] {
+        const GenerateResponse out = client.generate("c", "f.csv", "p");
+        require(out.success && out.xml && !out.xml->empty(),
+                "a returned GenerateResponse always carries the XML");
+      },
+      status, true);
   expect_documented([&] { static_cast<void>(client.check("<x/>")); }, status, false);
   expect_documented([&] { static_cast<void>(client.faces()); }, status, false);
   expect_documented([&] { static_cast<void>(client.project_face("f", "<x/>")); }, status, false);

@@ -226,7 +226,9 @@ See [`docs/BENCHMARKS.md`](docs/BENCHMARKS.md) for methodology and full results.
   `GenerationRefused`, an `ApiError` with status 422, is what `generate`
   throws when the server refuses the data; `response()` is the decoded
   `GenerateResponse` with `validation_errors` and `scheme_violations`.
-  `TransportError` covers no response and malformed 2xx bodies. Bad
+  `TransportError` covers no response and malformed 2xx bodies;
+  `NoDocument`, a `TransportError`, is a 2xx `generate` reply that carries
+  no XML. Bad
   options throw `std::invalid_argument`.
 - **RAII around libcurl.** The easy handle and header lists are owned by
   `std::unique_ptr` with their cleanup functions; there is no raw

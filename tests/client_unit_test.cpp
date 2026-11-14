@@ -35,10 +35,12 @@ std::string header(const HttpRequest& request, const std::string& name) {
 
 TEST(ClientRequest, SendsJsonWithBearerAndUserAgent) {
   const auto state = std::make_shared<FakeState>();
-  Client client = fake_client(state, {{200, R"({"success":true,"message":"ok"})"}}, "s3cret");
+  Client client = fake_client(
+      state, {{200, R"({"success":true,"message":"ok","xml":"<Document/>"})"}}, "s3cret");
   const GenerateResponse out =
       client.generate("id,date\n", "payments.csv", message_type::kPain00100109, "sepa-sct");
   EXPECT_TRUE(out.success);
+  EXPECT_EQ(out.xml, "<Document/>");
   const HttpRequest& sent = state->requests.at(0);
   EXPECT_EQ(sent.method, "POST");
   EXPECT_EQ(sent.url, "http://pain001.test/api/v1/ui/generate");
@@ -306,6 +308,31 @@ namespace pain001 {
 namespace {
 
 TEST(Version, HeaderMatchesTheBuild) { EXPECT_EQ(kSdkVersion, PAIN001_SDK_PROJECT_VERSION); }
+
+// A 2xx generate reply without the XML is a broken reply, not a refusal:
+// NoDocument (a TransportError), never a returned empty response.
+TEST(ClientGenerate, SuccessWithoutXmlThrowsNoDocument) {
+  for (const char* body :
+       {R"({"success":true,"message":"ok"})", R"({"success":true,"message":"ok","xml":""})",
+        R"({"success":false,"message":"refused","xml":"<Document/>"})"}) {
+    const auto state = std::make_shared<FakeState>();
+    Client client = fake_client(state, {{200, body}});
+    try {
+      static_cast<void>(client.generate("c", "f.csv", "pain.001.001.09"));
+      ADD_FAILURE() << "expected NoDocument for " << body;
+    } catch (const NoDocument& e) {
+      EXPECT_STREQ(e.what(), "pain001: POST /api/v1/ui/generate: success response carries no XML");
+    } catch (const std::exception& e) {
+      ADD_FAILURE() << "expected NoDocument, got " << e.what();
+    }
+  }
+}
+
+TEST(ClientGenerate, NoDocumentIsATransportErrorNotAnApiError) {
+  const auto state = std::make_shared<FakeState>();
+  Client client = fake_client(state, {{200, R"({"success":true,"message":"ok"})"}});
+  EXPECT_THROW(static_cast<void>(client.generate("c", "f.csv", "pain.001.001.09")), TransportError);
+}
 
 }  // namespace
 }  // namespace pain001
