@@ -16,6 +16,7 @@
 
 #include <chrono>
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <optional>
 #include <stdexcept>
@@ -144,14 +145,46 @@ class Transport {
 /// A Transport backed by one reusable libcurl easy handle.
 std::unique_ptr<Transport> make_curl_transport();
 
+/// Opt-in retries for idempotent requests: `health()`, `faces()` and
+/// `request()` with method GET. POST is never retried, so `validate`,
+/// `generate`, `check` and `project_face` send exactly one request.
+///
+/// A GET is retried when the transport throws TransportError (no
+/// response: connection refused or reset, timeout) or the server answers
+/// 429 or 503. The wait before attempt n+1 is `initial_backoff * 2^(n-1)`,
+/// capped at `max_backoff`, and with `jitter` a uniformly random time
+/// between zero and that. A 429 or 503 with `Retry-After` (delta-seconds
+/// or an IMF-fixdate) waits what the server asks instead; when that is
+/// longer than `max_backoff`, the response is returned as it is (and the
+/// typed methods throw ApiError) rather than waiting. After the last
+/// attempt the last response or TransportError reaches the caller.
+struct RetryPolicy {
+  /// Total attempts, the first included. 1 means no retry.
+  int max_attempts = 3;
+  /// The wait before the second attempt; it doubles for each later one.
+  std::chrono::milliseconds initial_backoff{200};
+  /// The longest computed wait, and the longest Retry-After honoured.
+  /// At most one hour.
+  std::chrono::milliseconds max_backoff{std::chrono::seconds(5)};
+  /// Wait a random time in [0, backoff] ("full jitter") so clients that
+  /// failed together do not retry together.
+  bool jitter = true;
+  /// How to wait. Empty means std::this_thread::sleep_for; set it to
+  /// integrate with your own scheduler or to observe the waits in tests.
+  std::function<void(std::chrono::milliseconds)> sleep{};
+};
+
 /// How to reach the server.
 struct ClientOptions {
   /// For example `http://127.0.0.1:8000`; http or https only.
   std::string base_url;
   /// Sent as `Authorization: Bearer <key>` when set.
   std::optional<std::string> api_key;
-  /// Whole-request timeout. Zero means no timeout.
+  /// Whole-request timeout, per attempt. Zero means no timeout.
   std::chrono::milliseconds timeout{std::chrono::seconds(30)};
+  /// Retries for idempotent calls. Unset (the default) sends every
+  /// request once.
+  std::optional<RetryPolicy> retry{};
 };
 
 /// `GET /api/v1/health`.
@@ -266,8 +299,9 @@ struct Response {
 /// A client for one pain001 server. Movable, not copyable.
 class Client {
  public:
-  /// Uses libcurl. Throws std::invalid_argument on a bad base URL or an
-  /// API key that would break the header.
+  /// Uses libcurl. Throws std::invalid_argument on a bad base URL, an
+  /// API key that would break the header, a negative timeout or a retry
+  /// policy outside its documented range.
   explicit Client(ClientOptions options);
   /// Uses the given transport (tests, custom HTTP stacks).
   Client(ClientOptions options, std::unique_ptr<Transport> transport);

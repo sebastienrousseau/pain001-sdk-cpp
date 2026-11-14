@@ -14,6 +14,7 @@
 
 #include "models.hpp"
 #include "pain001/client.hpp"
+#include "retry.hpp"
 
 namespace pain001 {
 namespace {
@@ -50,6 +51,9 @@ ClientOptions checked(ClientOptions options) {
   }
   if (options.timeout.count() < 0) {
     throw std::invalid_argument("timeout must not be negative");
+  }
+  if (options.retry) {
+    detail::check_retry_policy(*options.retry);
   }
   return options;
 }
@@ -212,6 +216,9 @@ HttpResponse Client::send(std::string_view method, std::string_view path,
   if (body) {
     request.body = serialise(*body);
     request.headers.emplace_back("Content-Type", "application/json");
+  }
+  if (options_.retry && method == "GET") {
+    return detail::send_with_retry(*transport_, request, *options_.retry);
   }
   return transport_->send(request);
 }

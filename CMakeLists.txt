@@ -37,7 +37,7 @@ function(pain001_sdk_warnings target)
   endif()
 endfunction()
 
-add_library(pain001_sdk src/client.cpp src/curl_transport.cpp src/models.cpp)
+add_library(pain001_sdk src/client.cpp src/curl_transport.cpp src/models.cpp src/retry.cpp)
 add_library(pain001::sdk ALIAS pain001_sdk)
 target_compile_features(pain001_sdk PUBLIC cxx_std_17)
 set_target_properties(pain001_sdk PROPERTIES CXX_EXTENSIONS OFF)

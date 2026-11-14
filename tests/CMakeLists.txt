@@ -16,6 +16,7 @@ add_executable(
   conformance_test.cpp
   kit_unit_test.cpp
   live_test.cpp
+  retry_test.cpp
   transport_test.cpp
   support/http_server.cpp
   support/kit.cpp
