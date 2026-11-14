@@ -26,30 +26,43 @@ constexpr std::array<Word, 64> kRound = {
 
 constexpr Word rotr(Word x, unsigned n) { return (x >> n) | (x << (32U - n)); }
 
+// The four sigma functions and Ch/Maj of FIPS 180-4, section 4.1.2.
+constexpr Word big_sigma0(Word x) { return rotr(x, 2) ^ rotr(x, 13) ^ rotr(x, 22); }
+constexpr Word big_sigma1(Word x) { return rotr(x, 6) ^ rotr(x, 11) ^ rotr(x, 25); }
+constexpr Word small_sigma0(Word x) { return rotr(x, 7) ^ rotr(x, 18) ^ (x >> 3U); }
+constexpr Word small_sigma1(Word x) { return rotr(x, 17) ^ rotr(x, 19) ^ (x >> 10U); }
+constexpr Word choose(Word x, Word y, Word z) { return (x & y) ^ (~x & z); }
+constexpr Word majority(Word x, Word y, Word z) { return (x & y) ^ (x & z) ^ (y & z); }
+
+// Big-endian word i of a 64-byte block.
+Word load_word(const unsigned char* block, std::size_t i) {
+  const unsigned char* p = block + 4 * i;
+  return (Word{p[0]} << 24U) | (Word{p[1]} << 16U) | (Word{p[2]} << 8U) | Word{p[3]};
+}
+
 std::array<Word, 64> schedule(const unsigned char* block) {
   std::array<Word, 64> w{};
   for (std::size_t i = 0; i < 16; ++i) {
-    w[i] = (Word{block[4 * i]} << 24U) | (Word{block[4 * i + 1]} << 16U) |
-           (Word{block[4 * i + 2]} << 8U) | Word{block[4 * i + 3]};
+    w[i] = load_word(block, i);
   }
   for (std::size_t i = 16; i < 64; ++i) {
-    const Word s0 = rotr(w[i - 15], 7) ^ rotr(w[i - 15], 18) ^ (w[i - 15] >> 3U);
-    const Word s1 = rotr(w[i - 2], 17) ^ rotr(w[i - 2], 19) ^ (w[i - 2] >> 10U);
-    w[i] = w[i - 16] + s0 + w[i - 7] + s1;
+    w[i] = w[i - 16] + small_sigma0(w[i - 15]) + w[i - 7] + small_sigma1(w[i - 2]);
   }
   return w;
 }
 
+// One round on the working variables a..h (v[0]..v[7]).
+State sha_round(const State& v, Word k, Word w) {
+  const Word t1 = v[7] + big_sigma1(v[4]) + choose(v[4], v[5], v[6]) + k + w;
+  const Word t2 = big_sigma0(v[0]) + majority(v[0], v[1], v[2]);
+  return {t1 + t2, v[0], v[1], v[2], v[3] + t1, v[4], v[5], v[6]};
+}
+
 void compress(State& state, const unsigned char* block) {
   const std::array<Word, 64> w = schedule(block);
-  State v = state;  // a b c d e f g h
+  State v = state;
   for (std::size_t i = 0; i < 64; ++i) {
-    const Word s1 = rotr(v[4], 6) ^ rotr(v[4], 11) ^ rotr(v[4], 25);
-    const Word ch = (v[4] & v[5]) ^ (~v[4] & v[6]);
-    const Word t1 = v[7] + s1 + ch + kRound[i] + w[i];
-    const Word s0 = rotr(v[0], 2) ^ rotr(v[0], 13) ^ rotr(v[0], 22);
-    const Word maj = (v[0] & v[1]) ^ (v[0] & v[2]) ^ (v[1] & v[2]);
-    v = {t1 + s0 + maj, v[0], v[1], v[2], v[3] + t1, v[4], v[5], v[6]};
+    v = sha_round(v, kRound[i], w[i]);
   }
   for (std::size_t i = 0; i < 8; ++i) {
     state[i] += v[i];
