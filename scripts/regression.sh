@@ -83,11 +83,12 @@ echo "== make examples"
 "$MAKE" examples
 echo "== benchmark smoke run"
 "$MAKE" bench BENCH_ARGS=--benchmark_min_time=0.01s
-if "${CXX:-c++}" --version 2>/dev/null | grep -q clang; then
+if "${CC:-cc}" --version 2>/dev/null | grep -q clang &&
+  "${CXX:-c++}" --version 2>/dev/null | grep -q clang; then
   echo "== make coverage"
   "$MAKE" coverage
 else
-  echo "== make coverage skipped: it needs clang (set CXX=clang++)"
+  echo "== make coverage skipped: it needs clang (set CC=clang CXX=clang++)"
 fi
 echo "== make package-test"
 "$MAKE" package-test

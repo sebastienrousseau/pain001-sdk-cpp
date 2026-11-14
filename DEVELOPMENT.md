@@ -36,7 +36,7 @@ except vhs and boots to a working `make check`.
 | Format, file size, complexity and clang-tidy (`ci.yml`, `lint`) | `make versions format-check filesize complexity tidy` | Version files agree, clang-format 18, 500 lines per file, the AGENTS.md complexity ceilings, clang-tidy's bugprone and performance checks |
 | Build and unit tests, GCC and Clang with ASan and UBSan (`ci.yml`, `build`) | `make test`; with sanitizers `make test CXX=clang++ CMAKE_ARGS="-DCMAKE_CXX_FLAGS='-fsanitize=address,undefined' -DCMAKE_EXE_LINKER_FLAGS='-fsanitize=address,undefined'"` | `-Wall -Wextra -Wpedantic -Werror`, ctest |
 | Installed CMake package (`ci.yml`, `package`) | `make package-test` | `cmake --install`, then `find_package(pain001_sdk CONFIG)` from `tests/package/` |
-| Coverage (`ci.yml`, `coverage`) | `make coverage` (clang) | 100% of lines and branch outcomes in `include/` and `src/` |
+| Coverage (`ci.yml`, `coverage`) | `make coverage` (clang: `CC=clang CXX=clang++` on Linux) | 100% of lines and branch outcomes in `include/` and `src/` |
 | Conformance kit, examples, benchmark smoke (`ci.yml`, `conformance`) | `make regression`, or by hand: start a server, then `make conformance examples bench` | Every kit case and typed test against `pain001 serve`, every example, every benchmark runs |
 | API breakage (`ci.yml`, `api`) | `scripts/api-check.sh <last-tag>` (Linux) | Source compatibility with the last release ([ADR 0005](docs/adr/0005-source-compatibility-not-abi-stability.md)) |
 | Regression script (`ci.yml`, `regression`) | `make regression` | The script itself, on Linux, end to end |

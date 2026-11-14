@@ -119,7 +119,8 @@ demo:
 	$(CMAKE) --build build-demo --target pain001_basic --parallel
 	PAIN001_SERVER="$(abspath $(PAIN001_SERVER))" $(VHS) .github/demo.tape
 
-# Source-based coverage (clang) of include/ and src/ from the unit tests
+# Source-based coverage (clang for CC and CXX: GoogleTest enables C, and
+# the link flags are clang's) of include/ and src/ from the unit tests
 # alone, no server: fails below 100% line and branch. Exclusions are
 # inline LCOV_EXCL markers with a reason (scripts/coverage-gate.py).
 coverage:
