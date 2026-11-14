@@ -97,8 +97,8 @@ jobs:
         run: |
           make test CMAKE_ARGS="-DCMAKE_CXX_FLAGS='$FLAGS' -DCMAKE_EXE_LINKER_FLAGS='$FLAGS'"
 
-      - name: The example was built
-        run: test -x build/pain001_basic
+      - name: The examples were built
+        run: for name in basic health validate check faces project_face raw_request errors timeouts_retries api_key; do test -x "build/pain001_$name"; done
 
   package:
     name: Installed CMake package (find_package)
@@ -153,6 +153,9 @@ jobs:
     timeout-minutes: 20
     env:
       PAIN001_BASE_URL: http://127.0.0.1:8000
+      # A synthetic key: the server requires it, the tests and examples
+      # send it, and examples/api_key.cpp shows the 401 without it.
+      PAIN001_API_KEY: ci-synthetic-key
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -189,11 +192,8 @@ jobs:
       - name: Conformance cases and typed tests (fail on any skip)
         run: make conformance
 
-      - name: Example against the server
-        run: |
-          build/pain001_basic < conformance/fixtures/credit-transfer.pain.001.001.09.csv \
-            > "$RUNNER_TEMP/payments.out.xml"
-          grep -q '<NbOfTxs>5</NbOfTxs>' "$RUNNER_TEMP/payments.out.xml"
+      - name: Every example against the server
+        run: make examples
 
       - name: Server log
         if: failure()

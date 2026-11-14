@@ -30,7 +30,7 @@ LLVM_PROFDATA ?= $(shell command -v llvm-profdata 2>/dev/null || xcrun --find ll
 SOURCES = $(shell find include src tests examples fuzz -type f \( -name '*.cpp' -o -name '*.hpp' \) | sort)
 TIDY_SOURCES = $(shell find src tests examples fuzz -type f -name '*.cpp' | sort)
 
-.PHONY: check configure build test conformance demo fuzz format format-check filesize versions complexity coverage package-test tidy clean
+.PHONY: check configure build test conformance examples demo fuzz format format-check filesize versions complexity coverage package-test tidy clean
 
 check: versions format-check filesize complexity build test tidy
 
@@ -51,6 +51,11 @@ conformance: build
 	  > $(BUILD_DIR)/conformance.log 2>&1 || status=$$?; \
 	cat $(BUILD_DIR)/conformance.log; \
 	test "$$status" -eq 0 && ! grep -q '\[  SKIPPED \]' $(BUILD_DIR)/conformance.log
+
+# Every example against the server at PAIN001_BASE_URL, which must have
+# been started with PAIN001_API_KEY (scripts/run-examples.sh).
+examples: build
+	./scripts/run-examples.sh $(BUILD_DIR)
 
 # libFuzzer with ASan and UBSan, FUZZ_SECONDS per target. New inputs go
 # to $(FUZZ_DIR)/corpus, crash reproducers to $(FUZZ_DIR)/artifacts.

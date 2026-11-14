@@ -58,10 +58,15 @@ target_include_directories(
 target_link_libraries(pain001_sdk PUBLIC nlohmann_json::nlohmann_json PRIVATE CURL::libcurl)
 pain001_sdk_warnings(pain001_sdk)
 
+# One example per public method, each built as pain001_<name>; CI runs
+# every one against a live server (README, Examples).
 if(PAIN001_SDK_BUILD_EXAMPLES)
-  add_executable(pain001_basic examples/basic.cpp)
-  target_link_libraries(pain001_basic PRIVATE pain001::sdk)
-  pain001_sdk_warnings(pain001_basic)
+  foreach(name basic health validate check faces project_face raw_request errors
+               timeouts_retries api_key)
+    add_executable(pain001_${name} examples/${name}.cpp)
+    target_link_libraries(pain001_${name} PRIVATE pain001::sdk)
+    pain001_sdk_warnings(pain001_${name})
+  endforeach()
 endif()
 
 if(PAIN001_SDK_BUILD_TESTS)
