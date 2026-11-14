@@ -24,7 +24,7 @@ FUZZ_TARGETS  = response error
 SOURCES = $(shell find include src tests examples fuzz -type f \( -name '*.cpp' -o -name '*.hpp' \) | sort)
 TIDY_SOURCES = $(shell find src tests examples fuzz -type f -name '*.cpp' | sort)
 
-.PHONY: check configure build test conformance fuzz format format-check filesize tidy clean
+.PHONY: check configure build test conformance demo fuzz format format-check filesize tidy clean
 
 check: format-check filesize build test tidy
 
@@ -62,6 +62,21 @@ fuzz:
 	    -dict=fuzz/json.dict -artifact_prefix=$(FUZZ_DIR)/artifacts/$$target- \
 	    -print_final_stats=1 $(FUZZ_DIR)/corpus/$$target fuzz/corpus/$$target || exit 1; \
 	done
+
+# Render .github/demo.gif with vhs. The tape starts the pain001 server
+# from PAIN001_SERVER (default: `pain001` on PATH) on 127.0.0.1:18088 and
+# runs the example against it; see CONTRIBUTING.md for the install.
+PAIN001_SERVER ?= $(shell command -v pain001 2>/dev/null)
+VHS            ?= vhs
+
+demo:
+	@test -n "$(PAIN001_SERVER)" && test -x "$(PAIN001_SERVER)" || { \
+	  echo "demo: no pain001 server; set PAIN001_SERVER to a pain001 binary (see CONTRIBUTING.md)"; exit 1; }
+	@command -v $(VHS) >/dev/null 2>&1 || { echo "demo: $(VHS) not found (https://github.com/charmbracelet/vhs)"; exit 1; }
+	@! curl -s -o /dev/null http://127.0.0.1:18088/ || { echo "demo: 127.0.0.1:18088 is already in use"; exit 1; }
+	$(CMAKE) -S . -B build-demo -DCMAKE_BUILD_TYPE=Release -DPAIN001_SDK_BUILD_TESTS=OFF
+	$(CMAKE) --build build-demo --target pain001_basic --parallel
+	PAIN001_SERVER="$(abspath $(PAIN001_SERVER))" $(VHS) .github/demo.tape
 
 format:
 	$(CLANG_FORMAT) -i $(SOURCES)

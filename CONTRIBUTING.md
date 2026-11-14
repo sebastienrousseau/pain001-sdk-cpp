@@ -40,6 +40,26 @@ make fuzz CXX=clang++ FUZZ_SECONDS=60   # ASan and UBSan, per target
 A reproducer lands in `build-fuzz/artifacts/`. Add an input that found a
 bug to `fuzz/corpus/<target>/` with the fix, and a unit test for it.
 
+## The README demo
+
+`make demo` renders `.github/demo.gif` from `.github/demo.tape` with
+[VHS](https://github.com/charmbracelet/vhs) (it needs `vhs`, `ttyd` and
+`ffmpeg`). It builds `examples/basic.cpp` into `build-demo/`, starts
+`pain001 serve` on 127.0.0.1:18088 off screen, runs the example against
+the kit's synthetic fixtures, and stops the server. The server comes
+from `PAIN001_SERVER`, or `pain001` on `PATH`; install the same
+hash-pinned server CI uses:
+
+```sh
+uv venv -p 3.12 /tmp/pain001-demo-srv
+VIRTUAL_ENV=/tmp/pain001-demo-srv uv pip install --require-hashes --no-deps \
+  -r ci/server-requirements.txt
+make demo PAIN001_SERVER=/tmp/pain001-demo-srv/bin/pain001
+```
+
+Re-render the GIF in the same change as anything that alters what it
+shows, and say in the commit what it shows.
+
 ## Rules
 
 - **`conformance/` is vendored from core.** Never edit it here: a change

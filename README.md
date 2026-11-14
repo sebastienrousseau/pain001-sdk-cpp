@@ -20,10 +20,7 @@
 </p>
 
 <p align="center">
-  No demo recording yet: the SDK needs a running pain001 server, and the
-  repository does not yet ship the VHS recipe that would start one and
-  render the GIF. <a href="examples/basic.cpp"><code>examples/basic.cpp</code></a>
-  shows the same flow as code.
+  <img src="https://raw.githubusercontent.com/sebastienrousseau/pain001-sdk-cpp/main/.github/demo.gif" alt="The C++ example program against a local pain001 server: a health check, a pain.001.001.09 file generated from the synthetic credit-transfer CSV and its first lines, then the server refusing a CSV with a bad IBAN" width="100%" />
 </p>
 
 ---
@@ -298,7 +295,10 @@ are installed, saying so when they are not. `make conformance` runs every
 case in `conformance/cases.json` and the typed tests against the server
 at `PAIN001_BASE_URL`, and fails on any skip. CI runs the lint job, a GCC
 build, a Clang build with AddressSanitizer and UndefinedBehaviorSanitizer,
-and the conformance job against a hash-pinned `pain001[api]` server. See
+and the conformance job against a hash-pinned `pain001[api]` server.
+`make demo` re-renders `.github/demo.gif` from `.github/demo.tape` with
+[VHS](https://github.com/charmbracelet/vhs), running the example against
+a `pain001 serve` it starts on 127.0.0.1. See
 [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ---

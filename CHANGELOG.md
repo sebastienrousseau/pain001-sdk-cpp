@@ -36,6 +36,11 @@ The first release will be 0.0.86, with pain001 0.0.86.
   and `validate-chaps-purpose-required`, and their fixtures.
 - `examples/basic.cpp`: generate a pain.001.001.09 file from the kit's
   credit-transfer fixture.
+- A README demo, `.github/demo.gif`, rendered by `make demo` from the
+  VHS tape `.github/demo.tape`: the example generates a pain.001.001.09
+  file from the kit's credit-transfer fixture and shows the server's
+  refusal of the bad-IBAN fixture, against a `pain001 serve` started on
+  loopback from `PAIN001_SERVER`.
 - CMake build (nlohmann/json 3.12.0 and GoogleTest 1.18.0 by
   `FetchContent`, pinned by SHA-256), a `make check` gate, CI with lint,
   GCC and sanitizer builds and a conformance job against a hash-pinned
