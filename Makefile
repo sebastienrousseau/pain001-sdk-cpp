@@ -21,11 +21,15 @@ FUZZ_DIR     ?= build-fuzz
 FUZZ_SECONDS ?= 30
 FUZZ_FLAGS   ?= -fsanitize=address,undefined -fno-sanitize-recover=undefined
 FUZZ_TARGETS  = response error
+COV_DIR      ?= build-coverage
+COV_FLAGS     = -fprofile-instr-generate -fcoverage-mapping
+LLVM_COV     ?= $(shell command -v llvm-cov 2>/dev/null || xcrun --find llvm-cov 2>/dev/null)
+LLVM_PROFDATA ?= $(shell command -v llvm-profdata 2>/dev/null || xcrun --find llvm-profdata 2>/dev/null)
 
 SOURCES = $(shell find include src tests examples fuzz -type f \( -name '*.cpp' -o -name '*.hpp' \) | sort)
 TIDY_SOURCES = $(shell find src tests examples fuzz -type f -name '*.cpp' | sort)
 
-.PHONY: check configure build test conformance demo fuzz format format-check filesize versions complexity tidy clean
+.PHONY: check configure build test conformance demo fuzz format format-check filesize versions complexity coverage tidy clean
 
 check: versions format-check filesize complexity build test tidy
 
@@ -78,6 +82,27 @@ demo:
 	$(CMAKE) -S . -B build-demo -DCMAKE_BUILD_TYPE=Release -DPAIN001_SDK_BUILD_TESTS=OFF
 	$(CMAKE) --build build-demo --target pain001_basic --parallel
 	PAIN001_SERVER="$(abspath $(PAIN001_SERVER))" $(VHS) .github/demo.tape
+
+# Source-based coverage (clang) of include/ and src/ from the unit tests
+# alone, no server: fails below 100% line and branch. Exclusions are
+# inline LCOV_EXCL markers with a reason (scripts/coverage-gate.py).
+coverage:
+	$(CMAKE) -S . -B $(COV_DIR) -DCMAKE_BUILD_TYPE=Debug -DPAIN001_SDK_WERROR=ON \
+	  -DPAIN001_SDK_BUILD_EXAMPLES=OFF "-DCMAKE_CXX_FLAGS=$(COV_FLAGS)" \
+	  "-DCMAKE_EXE_LINKER_FLAGS=$(COV_FLAGS)" $(CMAKE_ARGS)
+	$(CMAKE) --build $(COV_DIR) --parallel
+	rm -f $(COV_DIR)/*.profraw
+	env -u PAIN001_BASE_URL LLVM_PROFILE_FILE=$(abspath $(COV_DIR))/cov-%p.profraw \
+	  $(CTEST) --test-dir $(COV_DIR) --output-on-failure
+	$(LLVM_PROFDATA) merge -sparse $(COV_DIR)/*.profraw -o $(COV_DIR)/coverage.profdata
+	$(LLVM_COV) report $(COV_DIR)/tests/pain001_sdk_tests -instr-profile=$(COV_DIR)/coverage.profdata \
+	  -ignore-filename-regex='/(_deps|tests|fuzz|examples|benchmarks)/' -show-branch-summary
+	$(LLVM_COV) export $(COV_DIR)/tests/pain001_sdk_tests -instr-profile=$(COV_DIR)/coverage.profdata \
+	  -ignore-filename-regex='/(_deps|tests|fuzz|examples|benchmarks)/' -format=lcov \
+	  > $(COV_DIR)/coverage.lcov
+	$(LLVM_COV) export $(COV_DIR)/tests/pain001_sdk_tests -instr-profile=$(COV_DIR)/coverage.profdata \
+	  -ignore-filename-regex='/(_deps|tests|fuzz|examples|benchmarks)/' > $(COV_DIR)/coverage.json
+	python3 scripts/coverage-gate.py $(COV_DIR)/coverage.lcov $(COV_DIR)/coverage.json
 
 format:
 	$(CLANG_FORMAT) -i $(SOURCES)

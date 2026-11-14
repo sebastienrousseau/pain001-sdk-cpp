@@ -111,6 +111,19 @@ TEST(CurlTransport, ReportsATimeout) {
   }
 }
 
+TEST(CurlTransport, ReportsAnOptionLibcurlRejects) {
+  // libcurl refuses a string option longer than 8 MB (CURL_MAX_INPUT_LENGTH).
+  const LoopbackServer server({});
+  Client client(options_for(server));
+  try {
+    static_cast<void>(client.request("GET", "/" + std::string(9'000'000, 'a')));
+    FAIL() << "expected TransportError";
+  } catch (const TransportError& error) {
+    EXPECT_STREQ(error.what(), "libcurl rejected a request option");
+  }
+  EXPECT_TRUE(server.requests().empty());
+}
+
 TEST(CurlTransport, ReportsAConnectionRefused) {
   std::string url;
   {

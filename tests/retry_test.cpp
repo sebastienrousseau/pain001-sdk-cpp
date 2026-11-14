@@ -217,9 +217,11 @@ TEST(Retry, AFutureHttpDateWaitsUntilThen) {
 }
 
 TEST(Retry, AnUnreadableRetryAfterFallsBackToTheBackoff) {
-  for (const char* value : {"soon", "-1", "Sunday, 06-Nov-94 08:49:37 GMT"}) {
+  for (const char* value : {"", "soon", "-1", "Sunday, 06-Nov-94 08:49:37 GMT"}) {
     const Harness h;
-    Client client = h.client({busy(503, value), {200, kHealthy}}, h.policy());
+    HttpResponse reply = busy(503);
+    reply.headers.emplace_back("Retry-After", value);
+    Client client = h.client({reply, {200, kHealthy}}, h.policy());
     EXPECT_EQ(client.health().status, "healthy") << value;
     EXPECT_EQ(*h.waits, (std::vector<milliseconds>{milliseconds(100)})) << value;
   }

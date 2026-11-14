@@ -9,6 +9,7 @@
 #include <cstdint>
 #include <limits>
 #include <memory>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -110,6 +111,18 @@ TEST(ErrorMapping, ArrayDetailFor422) {
   EXPECT_EQ(items[0].loc, json::parse(R"(["body","xml"])"));
   EXPECT_EQ(items[0].type, "t");
   EXPECT_FALSE(items[0].input.has_value());
+}
+
+TEST(ErrorMapping, ValidationErrorInputAndContext) {
+  const ApiError error = capture(422, R"({"detail":[
+    {"loc":["body"],"msg":"m","type":"t","input":{"xml":1},"ctx":{"limit":3}},
+    {"loc":["body"],"msg":"m","type":"t","input":null,"ctx":null}]})");
+  const std::vector<ValidationError> items = error.validation_errors();
+  ASSERT_EQ(items.size(), 2U);
+  EXPECT_EQ(items[0].input, json::parse(R"({"xml":1})"));
+  EXPECT_EQ(items[0].ctx, json::parse(R"({"limit":3})"));
+  EXPECT_FALSE(items[1].input.has_value());
+  EXPECT_FALSE(items[1].ctx.has_value());
 }
 
 TEST(ErrorMapping, ValidationErrorsEmptyForOtherDetails) {
@@ -215,8 +228,9 @@ TEST(Decoding, GenerateRequestErrorStaysAPlainApiError) {
   Client client = fake_client(state, {{422, reply},
                                       {400, R"({"detail":"bad file"})"},
                                       {422, R"({"success":"no"})"},
-                                      {422, R"({"success":false,"validation_errors":1})"}});
-  for (const long status : {422L, 400L, 422L, 422L}) {
+                                      {422, R"({"success":false,"validation_errors":1})"},
+                                      {422, R"([false])"}});
+  for (const long status : {422L, 400L, 422L, 422L, 422L}) {
     try {
       static_cast<void>(client.generate("c", "f.csv", "pain.999.001.01"));
       FAIL() << "expected ApiError";
@@ -290,9 +304,66 @@ TEST(Options, RejectsUnsafeValues) {
 
 TEST(Options, ClientIsMovable) {
   const auto state = std::make_shared<FakeState>();
-  Client first = fake_client(state, {{200, R"([])"}});
+  Client first = fake_client(state, {{200, R"([])"}, {200, R"([])"}});
   Client second = std::move(first);
   EXPECT_TRUE(second.faces().empty());
+  Client third = fake_client(std::make_shared<FakeState>(), {});
+  third = std::move(second);
+  EXPECT_TRUE(third.faces().empty());
+}
+
+TEST(Options, AcceptsHttpsAndStripsTrailingSlashes) {
+  const auto state = std::make_shared<FakeState>();
+  ClientOptions options;
+  options.base_url = "https://pain001.test///";
+  Client client(std::move(options), std::make_unique<kit::FakeTransport>(state));
+  state->responses.push_back({200, "[]"});
+  static_cast<void>(client.faces());
+  EXPECT_EQ(state->requests.at(0).url, "https://pain001.test/api/v1/faces");
+}
+
+TEST(ClientRequest, KeepsUnreservedCharactersInTheFaceSegment) {
+  const auto state = std::make_shared<FakeState>();
+  const std::string reply = R"({"face":"f","version":"v","payload":null,"loss_report":{"face":"f",
+    "total_source_elements":0,"mapped_count":0,"unmapped_count":0,"is_lossless":true,
+    "loss_ratio":0,"mapped_paths":[],"unmapped_paths":[]}})";
+  Client client = fake_client(state, {{200, reply}});
+  static_cast<void>(client.project_face("A-z.0_9~", "<x/>"));
+  EXPECT_EQ(state->requests.at(0).url, "http://pain001.test/api/v1/faces/A-z.0_9~");
+}
+
+TEST(Decoding, FacesListsEveryEntry) {
+  const auto state = std::make_shared<FakeState>();
+  Client client = fake_client(state, {{200, R"([{"name":"berlin-group","description":"d",
+    "bindings":["ConsentId"]}])"}});
+  const std::vector<FaceInfo> faces = client.faces();
+  ASSERT_EQ(faces.size(), 1U);
+  EXPECT_EQ(faces[0].name, "berlin-group");
+  EXPECT_EQ(faces[0].description, "d");
+  EXPECT_EQ(faces[0].bindings, std::vector<std::string>{"ConsentId"});
+}
+
+TEST(Decoding, NullListsAreEmpty) {
+  const auto state = std::make_shared<FakeState>();
+  Client client = fake_client(
+      state, {{200, R"({"is_valid":true,"total_rows":0,"errors":null,"scheme_violations":null})"}});
+  const ValidationResponse out = client.validate("c", "f.csv", "p");
+  EXPECT_TRUE(out.errors.empty());
+  EXPECT_TRUE(out.scheme_violations.empty());
+}
+
+TEST(ErrorMapping, InformationalStatusIsAnApiError) { EXPECT_EQ(capture(199, "{}").status(), 199); }
+
+TEST(ErrorMapping, NonObjectJsonBodyIsTheDetail) {
+  EXPECT_EQ(capture(500, "[1,2]").detail(), json::parse("[1,2]"));
+}
+
+TEST(HttpResponseHeader, MatchesNamesCaseInsensitively) {
+  const HttpResponse response{200, "", {{"Content-Type", "a"}, {"retry-after", "3"}}};
+  EXPECT_EQ(response.header("content-type"), std::optional<std::string>("a"));
+  EXPECT_EQ(response.header("Retry-After"), std::optional<std::string>("3"));
+  EXPECT_FALSE(response.header("Content-Typf").has_value());
+  EXPECT_FALSE(response.header("Age").has_value());
 }
 
 }  // namespace
