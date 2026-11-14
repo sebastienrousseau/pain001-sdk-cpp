@@ -3,9 +3,13 @@
 // Every error the SDK throws, from the most specific handler to the
 // most general:
 //
-//   pain001_errors bad-iban.csv bad-currency.csv
+//   pain001_errors < bad-currency.csv
 //
-// 1. ApiError 400: a file the server refuses outright (bad IBAN).
+// The input is a CSV with a row the server refuses (the kit's
+// bad-currency fixture).
+//
+// 1. ApiError 400: a file the server refuses outright (its header line
+//    alone: no payment rows).
 // 2. ApiError 422 with validation_errors(): a malformed request (an
 //    unknown message type).
 // 3. GenerationRefused (an ApiError, 422): generate refuses the rows.
@@ -78,15 +82,13 @@ void no_document() {
 
 }  // namespace
 
-int main(int argc, char** argv) {
-  return example::run([argc, argv] {
-    const char* usage = "pain001_errors bad-iban.csv bad-currency.csv";
-    const std::string bad_iban = example::read_file(example::arg(argc, argv, 1, usage));
-    const std::string bad_currency = example::read_file(example::arg(argc, argv, 2, usage));
+int main() {
+  return example::run([] {
+    const std::string csv = example::read_stdin("pain001_errors < bad-currency.csv");
     pain001::Client client(example::options_from_env());
-    bad_file(client, bad_iban);
-    bad_request(client, bad_iban);
-    refused(client, bad_currency);
+    bad_file(client, csv.substr(0, csv.find('\n') + 1));
+    bad_request(client, csv);
+    refused(client, csv);
     no_document();
     return 0;
   });

@@ -299,20 +299,21 @@ from the environment; the library itself reads no environment variables.
 
 Each is built as `build/pain001_<name>` and run by CI against a live
 `pain001 serve` (started with an API key) on the kit's fixtures
-(`make examples`).
+(`make examples`). Input comes on stdin: the examples never open a file
+themselves.
 
 | Example | Shows | Run |
 | :--- | :--- | :--- |
 | [`basic.cpp`](examples/basic.cpp) | `generate()`: CSV on stdin to pain.001.001.09 XML on stdout | `pain001_basic < payments.csv > payments.xml` |
 | [`health.cpp`](examples/health.cpp) | `health()` | `pain001_health` |
-| [`validate.cpp`](examples/validate.cpp) | `validate()` with an optional message type and scheme | `pain001_validate payments.csv [type] [scheme]` |
-| [`check.cpp`](examples/check.cpp) | `check()` and its findings | `pain001_check document.xml [scheme]` |
+| [`validate.cpp`](examples/validate.cpp) | `validate()` with an optional message type and scheme | `pain001_validate [type] [scheme] < payments.csv` |
+| [`check.cpp`](examples/check.cpp) | `check()` and its findings | `pain001_check [scheme] < document.xml` |
 | [`faces.cpp`](examples/faces.cpp) | `faces()` | `pain001_faces` |
-| [`project_face.cpp`](examples/project_face.cpp) | `project_face()` and the loss report | `pain001_project_face document.xml [face]` |
+| [`project_face.cpp`](examples/project_face.cpp) | `project_face()` and the loss report | `pain001_project_face [face] < document.xml` |
 | [`raw_request.cpp`](examples/raw_request.cpp) | `request()` returning 404 and 422 without throwing | `pain001_raw_request` |
-| [`errors.cpp`](examples/errors.cpp) | `ApiError`, `validation_errors()`, `GenerationRefused`, `NoDocument` | `pain001_errors bad-iban.csv bad-currency.csv` |
+| [`errors.cpp`](examples/errors.cpp) | `ApiError`, `validation_errors()`, `GenerationRefused`, `NoDocument` | `pain001_errors < bad-currency.csv` |
 | [`timeouts_retries.cpp`](examples/timeouts_retries.cpp) | `timeout`, `RetryPolicy`, the final `TransportError` | `pain001_timeouts_retries [unreachable-url]` |
-| [`api_key.cpp`](examples/api_key.cpp) | `api_key`: 401 without it, accepted with it, CR LF refused | `PAIN001_API_KEY=... pain001_api_key payments.csv` |
+| [`api_key.cpp`](examples/api_key.cpp) | `api_key`: 401 without it, accepted with it, CR LF refused | `PAIN001_API_KEY=... pain001_api_key < payments.csv` |
 
 ---
 

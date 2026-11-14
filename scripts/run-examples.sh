@@ -33,26 +33,25 @@ expect() {
   fi
 }
 
-expect basic '<NbOfTxs>5</NbOfTxs>' -- \
-  sh -c "'$bin/pain001_basic' < '$fx/credit-transfer.pain.001.001.09.csv'"
+# run NAME [ARGS...] < INPUT: the example binary, from the build directory.
+csv=$fx/credit-transfer.pain.001.001.09.csv
+xml=$fx/credit-transfer.pain.001.001.09.xml
+bad=$fx/bad-currency.pain.001.001.09.csv
+
+expect basic '<NbOfTxs>5</NbOfTxs>' -- sh -c "'$bin/pain001_basic' < '$csv'"
 expect health '^status: healthy$' -- "$bin/pain001_health"
-expect validate 'rows: 5 \(5 valid, 0 invalid\)' -- \
-  "$bin/pain001_validate" "$fx/credit-transfer.pain.001.001.09.csv"
-expect check 'pain.001.001.09: passed' -- \
-  "$bin/pain001_check" "$fx/credit-transfer.pain.001.001.09.xml"
+expect validate 'rows: 5 \(5 valid, 0 invalid\)' -- sh -c "'$bin/pain001_validate' < '$csv'"
+expect check 'pain.001.001.09: passed' -- sh -c "'$bin/pain001_check' < '$xml'"
 expect faces '^berlin_group: ' -- "$bin/pain001_faces"
-expect project_face '^berlin_group pain.001.001.09$' -- \
-  "$bin/pain001_project_face" "$fx/credit-transfer.pain.001.001.09.xml"
+expect project_face '^berlin_group pain.001.001.09$' -- sh -c "'$bin/pain001_project_face' < '$xml'"
 expect raw_request 'no-such-endpoint -> 404' -- "$bin/pain001_raw_request"
-expect errors '4. NoDocument' -- "$bin/pain001_errors" \
-  "$fx/bad-iban.pain.001.001.09.csv" "$fx/bad-currency.pain.001.001.09.csv"
-expect errors-refusal '3. GenerationRefused 422' -- "$bin/pain001_errors" \
-  "$fx/bad-iban.pain.001.001.09.csv" "$fx/bad-currency.pain.001.001.09.csv"
+expect errors-400 '^1. ApiError 400: ' -- sh -c "'$bin/pain001_errors' < '$bad'"
+expect errors-422 '^2. ApiError 422: \["body","message_type"\]' -- sh -c "'$bin/pain001_errors' < '$bad'"
+expect errors-refusal '^3. GenerationRefused 422' -- sh -c "'$bin/pain001_errors' < '$bad'"
+expect errors-no-document '^4. NoDocument' -- sh -c "'$bin/pain001_errors' < '$bad'"
 expect timeouts_retries 'gave up after 3 attempts' -- "$bin/pain001_timeouts_retries"
-expect api_key 'without a key: HTTP 401' -- \
-  "$bin/pain001_api_key" "$fx/credit-transfer.pain.001.001.09.csv"
-expect api_key-accepted 'with the key: accepted' -- \
-  "$bin/pain001_api_key" "$fx/credit-transfer.pain.001.001.09.csv"
+expect api_key 'without a key: HTTP 401' -- sh -c "'$bin/pain001_api_key' < '$csv'"
+expect api_key-accepted 'with the key: accepted' -- sh -c "'$bin/pain001_api_key' < '$csv'"
 
 if [ "$failures" -ne 0 ]; then
   echo "run-examples: $failures failed"

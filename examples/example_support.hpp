@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 //
 // Shared by the examples: the server from PAIN001_BASE_URL (default
-// http://127.0.0.1:8000) and PAIN001_API_KEY, reading a fixture, and one
+// http://127.0.0.1:8000) and PAIN001_API_KEY, reading stdin, and one
 // place that turns an SDK error into a message on stderr and exit code 1.
 // The server's detail can name rows and values; the examples print it
 // locally only, which is what an application should do too.
@@ -11,9 +11,8 @@
 
 #include <cstdlib>
 #include <exception>
-#include <fstream>
 #include <iostream>
-#include <sstream>
+#include <iterator>
 #include <stdexcept>
 #include <string>
 
@@ -37,15 +36,15 @@ inline pain001::ClientOptions options_from_env() {
   return options;
 }
 
-/// The whole file, or std::runtime_error naming it.
-inline std::string read_file(const std::string& path) {
-  std::ifstream in(path, std::ios::binary);
-  if (!in) {
-    throw std::runtime_error("cannot read " + path);
+/// All of standard input, or std::invalid_argument with the usage line
+/// when it is empty. The examples never open a file themselves: the shell
+/// decides what they read.
+inline std::string read_stdin(const char* usage) {
+  std::string text{std::istreambuf_iterator<char>{std::cin}, std::istreambuf_iterator<char>{}};
+  if (text.empty()) {
+    throw std::invalid_argument(std::string("nothing on stdin; usage: ") + usage);
   }
-  std::ostringstream text;
-  text << in.rdbuf();
-  return text.str();
+  return text;
 }
 
 /// argv[index], or std::invalid_argument with the usage line.

@@ -5,7 +5,7 @@
 // it with one. ClientOptions::api_key sets the header; a key with CR, LF
 // or NUL is rejected before anything is sent.
 //
-//   PAIN001_API_KEY=<key> pain001_api_key payments.csv
+//   PAIN001_API_KEY=<key> pain001_api_key < payments.csv
 
 #include <iostream>
 #include <optional>
@@ -30,10 +30,9 @@ void validate_with(pain001::ClientOptions options, const std::optional<std::stri
 
 }  // namespace
 
-int main(int argc, char** argv) {
-  return example::run([argc, argv] {
-    const std::string csv =
-        example::read_file(example::arg(argc, argv, 1, "pain001_api_key payments.csv"));
+int main() {
+  return example::run([] {
+    const std::string csv = example::read_stdin("pain001_api_key < payments.csv");
     const pain001::ClientOptions options = example::options_from_env();
     if (!options.api_key) {
       throw std::invalid_argument("set PAIN001_API_KEY to the key the server was started with");

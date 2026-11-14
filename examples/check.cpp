@@ -3,7 +3,7 @@
 // check(): run an existing pain.001 XML document through the server's
 // validation ladder (XSD, MDR, scheme, Schematron) and list the findings.
 //
-//   pain001_check document.xml [scheme]
+//   pain001_check [scheme] < document.xml
 
 #include <iostream>
 #include <optional>
@@ -13,10 +13,10 @@
 
 int main(int argc, char** argv) {
   return example::run([argc, argv] {
-    const char* usage = "pain001_check document.xml [scheme]";
-    const std::string xml = example::read_file(example::arg(argc, argv, 1, usage));
+    const char* usage = "pain001_check [scheme] < document.xml";
+    const std::string xml = example::read_stdin(usage);
     const std::optional<std::string> scheme =
-        argc > 2 ? std::optional<std::string>(example::arg(argc, argv, 2, usage)) : std::nullopt;
+        argc > 1 ? std::optional<std::string>(example::arg(argc, argv, 1, usage)) : std::nullopt;
     pain001::Client client(example::options_from_env());
     const pain001::CheckResponse result = client.check(xml, scheme);
     std::cout << result.message_type << ": " << (result.passed ? "passed" : "failed") << " ("
