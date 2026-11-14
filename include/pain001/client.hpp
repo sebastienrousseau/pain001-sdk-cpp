@@ -96,6 +96,15 @@ class TransportError : public Error {
   using Error::Error;
 };
 
+/// A 2xx reply to `generate` that carries no XML (`success` is not true,
+/// or `xml` is missing or empty): a broken or incomplete reply, not the
+/// server refusing the data, so it is not a GenerationRefused. It is a
+/// TransportError, so a handler for that still catches it.
+class NoDocument : public TransportError {
+ public:
+  using TransportError::TransportError;
+};
+
 /// One HTTP exchange, as the client hands it to a Transport.
 struct HttpRequest {
   std::string method;
@@ -167,7 +176,8 @@ struct ValidationResponse {
 
 /// `POST /api/v1/ui/generate`. A returned response always carries the
 /// XML; when the server refuses the data (HTTP 422, `success: false`),
-/// `Client::generate` throws GenerationRefused with this body instead.
+/// `Client::generate` throws GenerationRefused with this body instead,
+/// and a 2xx reply without the XML throws NoDocument.
 struct GenerateResponse {
   bool success = false;
   std::string message;

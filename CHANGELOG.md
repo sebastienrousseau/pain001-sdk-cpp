@@ -40,3 +40,27 @@ The first release will be 0.0.86, with pain001 0.0.86.
   `FetchContent`, pinned by SHA-256), a `make check` gate, CI with lint,
   GCC and sanitizer builds and a conformance job against a hash-pinned
   `pain001[api]==0.0.86` server.
+- libFuzzer targets in `fuzz/` for response decoding
+  (`pain001_fuzz_response`) and error mapping (`pain001_fuzz_error`),
+  driven through a canned `Transport`, with a seed corpus and a JSON
+  dictionary. They check that only `ApiError`, `GenerationRefused` and
+  `TransportError` escape, and that `ApiError::what()` never carries the
+  server's detail. `PAIN001_SDK_BUILD_FUZZERS` (off by default) builds
+  them; `make check` replays the seeds and `make fuzz` fuzzes. A `Fuzz`
+  workflow runs each target for 60 seconds under ASan and UBSan on every
+  pull request.
+
+### Fixed
+
+- `generate` returned a `GenerateResponse` without the XML when a 2xx
+  reply had `success` not true or no `xml`, against the header's promise
+  that a returned response always carries it. It now throws the new
+  `NoDocument` (a `TransportError`), as the Go SDK returns
+  `ErrNoDocument` and the Rust SDK `Error::Decode`. The fuzz targets now
+  check the promise.
+- A count in a response (`total_rows`, `valid_rows`, `invalid_rows`,
+  `errors`, `warnings`, and the `LossReport` counts) that does not fit
+  `std::int64_t` is now a `TransportError` ("unexpected shape"). Before,
+  a float such as `1e300` was converted with undefined behaviour, and an
+  integer above `INT64_MAX` wrapped to a negative count. Found by the
+  response fuzz target.

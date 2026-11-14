@@ -1,0 +1,1 @@
+{"face":"uk-ob","version":"4.0.1","payload":{"k":[1]},"loss_report":{"face":"uk-ob","total_source_elements":4,"mapped_count":3,"unmapped_count":1,"is_lossless":false,"loss_ratio":0.25,"mapped_paths":["/a"],"unmapped_paths":["/b"]}}

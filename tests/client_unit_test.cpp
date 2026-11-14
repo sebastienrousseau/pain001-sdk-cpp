@@ -6,6 +6,8 @@
 #include <gtest/gtest.h>
 
 #include <chrono>
+#include <cstdint>
+#include <limits>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -33,10 +35,12 @@ std::string header(const HttpRequest& request, const std::string& name) {
 
 TEST(ClientRequest, SendsJsonWithBearerAndUserAgent) {
   const auto state = std::make_shared<FakeState>();
-  Client client = fake_client(state, {{200, R"({"success":true,"message":"ok"})"}}, "s3cret");
+  Client client = fake_client(
+      state, {{200, R"({"success":true,"message":"ok","xml":"<Document/>"})"}}, "s3cret");
   const GenerateResponse out =
       client.generate("id,date\n", "payments.csv", message_type::kPain00100109, "sepa-sct");
   EXPECT_TRUE(out.success);
+  EXPECT_EQ(out.xml, "<Document/>");
   const HttpRequest& sent = state->requests.at(0);
   EXPECT_EQ(sent.method, "POST");
   EXPECT_EQ(sent.url, "http://pain001.test/api/v1/ui/generate");
@@ -224,6 +228,34 @@ TEST(Decoding, GenerateRequestErrorStaysAPlainApiError) {
   }
 }
 
+// A count the server sends must fit std::int64_t. nlohmann/json converts
+// with a plain cast: undefined behaviour for 1e300, and a wrap to a
+// negative number for an unsigned value above INT64_MAX.
+TEST(Decoding, CountsOutsideInt64AreTransportErrors) {
+  const auto state = std::make_shared<FakeState>();
+  const std::string face = R"({"face":"f","version":"v","payload":{},"loss_report":{"face":"f",
+    "total_source_elements":1,"mapped_count":1e19,"unmapped_count":0,"is_lossless":true,
+    "loss_ratio":0,"mapped_paths":[],"unmapped_paths":[]}})";
+  Client client =
+      fake_client(state, {{200, R"({"is_valid":true,"total_rows":1e300})"},
+                          {200, R"({"is_valid":true,"total_rows":1,"valid_rows":-1e300})"},
+                          {200, R"({"is_valid":true,"total_rows":18446744073709551615})"},
+                          {200, R"({"message_type":"m","passed":true,"errors":9223372036854775808,
+                "warnings":0,"rungs":[],"findings":[]})"},
+                          {200, face},
+                          {200, R"({"is_valid":true,"total_rows":9223372036854775807,
+                "valid_rows":-9223372036854775808,"invalid_rows":2.0})"}});
+  EXPECT_THROW(static_cast<void>(client.validate("c", "f.csv", "p")), TransportError);
+  EXPECT_THROW(static_cast<void>(client.validate("c", "f.csv", "p")), TransportError);
+  EXPECT_THROW(static_cast<void>(client.validate("c", "f.csv", "p")), TransportError);
+  EXPECT_THROW(static_cast<void>(client.check("<x/>")), TransportError);
+  EXPECT_THROW(static_cast<void>(client.project_face("f", "<x/>")), TransportError);
+  const ValidationResponse edge = client.validate("c", "f.csv", "p");
+  EXPECT_EQ(edge.total_rows, std::numeric_limits<std::int64_t>::max());
+  EXPECT_EQ(edge.valid_rows, std::numeric_limits<std::int64_t>::min());
+  EXPECT_EQ(edge.invalid_rows, 2);
+}
+
 TEST(Decoding, CheckWithFindings) {
   const auto state = std::make_shared<FakeState>();
   const std::string reply = R"({"message_type":"pain.001.001.09","passed":false,"errors":1,
@@ -276,6 +308,31 @@ namespace pain001 {
 namespace {
 
 TEST(Version, HeaderMatchesTheBuild) { EXPECT_EQ(kSdkVersion, PAIN001_SDK_PROJECT_VERSION); }
+
+// A 2xx generate reply without the XML is a broken reply, not a refusal:
+// NoDocument (a TransportError), never a returned empty response.
+TEST(ClientGenerate, SuccessWithoutXmlThrowsNoDocument) {
+  for (const char* body :
+       {R"({"success":true,"message":"ok"})", R"({"success":true,"message":"ok","xml":""})",
+        R"({"success":false,"message":"refused","xml":"<Document/>"})"}) {
+    const auto state = std::make_shared<FakeState>();
+    Client client = fake_client(state, {{200, body}});
+    try {
+      static_cast<void>(client.generate("c", "f.csv", "pain.001.001.09"));
+      ADD_FAILURE() << "expected NoDocument for " << body;
+    } catch (const NoDocument& e) {
+      EXPECT_STREQ(e.what(), "pain001: POST /api/v1/ui/generate: success response carries no XML");
+    } catch (const std::exception& e) {
+      ADD_FAILURE() << "expected NoDocument, got " << e.what();
+    }
+  }
+}
+
+TEST(ClientGenerate, NoDocumentIsATransportErrorNotAnApiError) {
+  const auto state = std::make_shared<FakeState>();
+  Client client = fake_client(state, {{200, R"({"success":true,"message":"ok"})"}});
+  EXPECT_THROW(static_cast<void>(client.generate("c", "f.csv", "pain.001.001.09")), TransportError);
+}
 
 }  // namespace
 }  // namespace pain001

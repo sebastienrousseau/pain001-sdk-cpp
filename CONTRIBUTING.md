@@ -29,6 +29,17 @@ PAIN001_BASE_URL=http://127.0.0.1:8000 make conformance
 `make conformance` fails if any case is skipped, so a run without a
 server cannot pass by accident. Use synthetic data only.
 
+`make check` also builds the fuzz targets in `fuzz/` with a replay main
+and runs their seed corpus. To fuzz them, use a clang with the libFuzzer
+runtime (not Apple clang); CI does this on every pull request:
+
+```sh
+make fuzz CXX=clang++ FUZZ_SECONDS=60   # ASan and UBSan, per target
+```
+
+A reproducer lands in `build-fuzz/artifacts/`. Add an input that found a
+bug to `fuzz/corpus/<target>/` with the fix, and a unit test for it.
+
 ## Rules
 
 - **`conformance/` is vendored from core.** Never edit it here: a change

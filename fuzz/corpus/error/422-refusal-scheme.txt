@@ -1,0 +1,1 @@
+422{"success":false,"message":"Scheme rules failed","xml":null,"validation_errors":[],"scheme_violations":[{"rule":"UK-CHAPS-PURP","severity":"error","field":"purpose_code"}]}

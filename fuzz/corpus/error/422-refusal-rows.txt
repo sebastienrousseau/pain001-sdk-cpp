@@ -1,0 +1,1 @@
+422{"success":false,"message":"Validation failed","xml":null,"validation_errors":[{"field":"$.currency","message":"not ISO 4217","value":"EURO"}],"scheme_violations":[]}

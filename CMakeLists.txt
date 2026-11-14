@@ -15,6 +15,7 @@ endif()
 option(PAIN001_SDK_BUILD_TESTS "Build the test suite" ${PAIN001_SDK_TOP_LEVEL})
 option(PAIN001_SDK_BUILD_EXAMPLES "Build the examples" ${PAIN001_SDK_TOP_LEVEL})
 option(PAIN001_SDK_WERROR "Treat compiler warnings as errors" OFF)
+option(PAIN001_SDK_BUILD_FUZZERS "Build the fuzz targets in fuzz/" OFF)
 
 # Third-party sources come from release archives pinned by SHA-256, so a
 # changed upstream archive fails the configure step instead of building.
@@ -54,4 +55,8 @@ endif()
 if(PAIN001_SDK_BUILD_TESTS)
   enable_testing()
   add_subdirectory(tests)
+endif()
+
+if(PAIN001_SDK_BUILD_FUZZERS)
+  add_subdirectory(fuzz)
 endif()

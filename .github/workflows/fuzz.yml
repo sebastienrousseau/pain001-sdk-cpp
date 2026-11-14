@@ -1,0 +1,50 @@
+# SPDX-License-Identifier: Apache-2.0 OR MIT
+#
+# libFuzzer on the response decoders and error mapping (fuzz/), with
+# ASan and UBSan, for a bounded time per target. A finding fails the job
+# and its reproducer is uploaded as an artifact; replay it locally with
+# `build-fuzz/fuzz/pain001_fuzz_<target> <file>` after `make fuzz`.
+name: Fuzz
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fuzz-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  libfuzzer:
+    name: libFuzzer (ASan, UBSan)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      CXX: clang++-18
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install libcurl headers and the libFuzzer runtime
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libcurl4-openssl-dev libclang-rt-18-dev
+
+      - name: Fuzz each target for 60 seconds
+        run: make fuzz FUZZ_SECONDS=60
+
+      - name: Upload crash reproducers
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: fuzz-artifacts
+          path: build-fuzz/artifacts/
+          if-no-files-found: ignore
+          retention-days: 14

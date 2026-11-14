@@ -221,7 +221,11 @@ GenerateResponse Client::generate(std::string_view content, std::string_view fil
   const json body = file_payload(content, filename, message_type, scheme);
   const HttpResponse response = send("POST", "/api/v1/ui/generate", body);
   throw_if_refused(response);
-  return decode<GenerateResponse>(success_body(response));
+  GenerateResponse out = decode<GenerateResponse>(success_body(response));
+  if (!out.success || !out.xml || out.xml->empty()) {
+    throw NoDocument("pain001: POST /api/v1/ui/generate: success response carries no XML");
+  }
+  return out;
 }
 
 CheckResponse Client::check(std::string_view xml, const std::optional<std::string>& scheme,
