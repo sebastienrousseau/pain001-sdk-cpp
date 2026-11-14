@@ -41,6 +41,9 @@ jobs:
           clang-format-18 --version
           clang-tidy-18 --version
 
+      - name: Version files agree
+        run: make versions
+
       - name: Format and file size
         run: make format-check filesize CLANG_FORMAT=clang-format-18
 

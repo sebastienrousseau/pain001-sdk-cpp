@@ -24,9 +24,9 @@ FUZZ_TARGETS  = response error
 SOURCES = $(shell find include src tests examples fuzz -type f \( -name '*.cpp' -o -name '*.hpp' \) | sort)
 TIDY_SOURCES = $(shell find src tests examples fuzz -type f -name '*.cpp' | sort)
 
-.PHONY: check configure build test conformance demo fuzz format format-check filesize tidy clean
+.PHONY: check configure build test conformance demo fuzz format format-check filesize versions tidy clean
 
-check: format-check filesize build test tidy
+check: versions format-check filesize build test tidy
 
 configure:
 	$(CMAKE) -S . -B $(BUILD_DIR) -DCMAKE_BUILD_TYPE=$(BUILD_TYPE) \
@@ -88,6 +88,9 @@ format-check:
 
 filesize:
 	./scripts/check-file-size.sh
+
+versions:
+	./scripts/verify-release-versions
 
 tidy: configure
 	@if command -v $(CLANG_TIDY) >/dev/null 2>&1; then \

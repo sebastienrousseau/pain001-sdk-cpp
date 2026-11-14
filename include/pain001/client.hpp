@@ -29,7 +29,7 @@
 namespace pain001 {
 
 /// The SDK version, in lockstep with the pain001 suite.
-inline constexpr std::string_view kSdkVersion = "0.0.87";
+inline constexpr std::string_view kSdkVersion = "0.0.88";
 
 /// The message types the server knows at this SDK version (the openapi
 /// `MessageType` enum). Methods take any string, so a newer server's

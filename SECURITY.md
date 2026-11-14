@@ -6,12 +6,13 @@
 
 This package follows the [`pain001`](https://github.com/sebastienrousseau/pain001)
 suite cadence. While pre-`1.0`, the latest released `0.0.x` receives
-security fixes; older `0.0.x` versions do not. No version is released
-yet; the first will be `0.0.87`.
+security fixes; older `0.0.x` versions do not. `0.0.88` is the first
+release of this SDK.
 
 | Version | Status | Receives security fixes? |
 | :--- | :--- | :--- |
-| `main` (unreleased) | In development | ✅ Yes |
+| `0.0.88` (latest) | Current | ✅ Yes |
+| `main` | In development | ✅ Yes |
 
 ## Reporting a vulnerability
 

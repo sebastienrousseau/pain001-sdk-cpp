@@ -8,7 +8,7 @@ advance in `0.0.1` steps in lockstep with the pain001 suite.
 
 ## [Unreleased]
 
-The first release will be 0.0.86, with pain001 0.0.86.
+The first release will be 0.0.88, in lockstep with the pain001 suite.
 
 ### Added
 
@@ -54,6 +54,15 @@ The first release will be 0.0.86, with pain001 0.0.86.
   them; `make check` replays the seeds and `make fuzz` fuzzes. A `Fuzz`
   workflow runs each target for 60 seconds under ASan and UBSan on every
   pull request.
+- `scripts/verify-release-versions`, run by `make check` and the CI lint
+  job, fails when `include/pain001/client.hpp`, `CITATION.cff`,
+  `SECURITY.md`, the README install snippet, `KEYS.asc` or the bug
+  report template disagree with the version in `CMakeLists.txt`.
+
+### Changed
+
+- Version 0.0.88 in every version-bearing file, the first tagged
+  release of this SDK (0.0.87 was prepared but never tagged).
 
 ### Fixed
 

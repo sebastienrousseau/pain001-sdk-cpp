@@ -66,16 +66,17 @@ include(FetchContent)
 FetchContent_Declare(
   pain001_sdk
   GIT_REPOSITORY https://github.com/sebastienrousseau/pain001-sdk-cpp.git
-  GIT_TAG        <commit SHA>)
+  GIT_TAG        v0.0.88)
 FetchContent_MakeAvailable(pain001_sdk)
 
 target_link_libraries(your_app PRIVATE pain001::sdk)
 ```
 
-The package is not yet on a registry (vcpkg, Conan) and has no tagged
-release: the first will be 0.0.87, in lockstep with the pain001 suite.
-Until then, pin a commit. `add_subdirectory` on a checkout works the same
-way. Tests and examples build only when this is the top-level project.
+The package is not on a registry (vcpkg, Conan). Its first tagged
+release is 0.0.88, in lockstep with the pain001 suite; until the tag is
+published, pin a commit SHA instead. `add_subdirectory` on a checkout
+works the same way. Tests and examples build only when this is the
+top-level project.
 
 ---
 
