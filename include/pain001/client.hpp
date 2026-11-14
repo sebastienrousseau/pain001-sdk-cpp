@@ -36,29 +36,29 @@ inline constexpr std::string_view kSdkVersion = "0.0.88";
 /// `MessageType` enum). Methods take any string, so a newer server's
 /// types work without an SDK release.
 namespace message_type {
-inline constexpr std::string_view kPain00100103 = "pain.001.001.03";
-inline constexpr std::string_view kPain00100104 = "pain.001.001.04";
-inline constexpr std::string_view kPain00100105 = "pain.001.001.05";
-inline constexpr std::string_view kPain00100106 = "pain.001.001.06";
-inline constexpr std::string_view kPain00100107 = "pain.001.001.07";
-inline constexpr std::string_view kPain00100108 = "pain.001.001.08";
-inline constexpr std::string_view kPain00100109 = "pain.001.001.09";
-inline constexpr std::string_view kPain00100110 = "pain.001.001.10";
-inline constexpr std::string_view kPain00100111 = "pain.001.001.11";
-inline constexpr std::string_view kPain00100112 = "pain.001.001.12";
-inline constexpr std::string_view kPain00100113 = "pain.001.001.13";
-inline constexpr std::string_view kPain00800102 = "pain.008.001.02";
-inline constexpr std::string_view kPain00800108 = "pain.008.001.08";
+inline constexpr std::string_view kPain00100103 = "pain.001.001.03";  ///< `pain.001.001.03`
+inline constexpr std::string_view kPain00100104 = "pain.001.001.04";  ///< `pain.001.001.04`
+inline constexpr std::string_view kPain00100105 = "pain.001.001.05";  ///< `pain.001.001.05`
+inline constexpr std::string_view kPain00100106 = "pain.001.001.06";  ///< `pain.001.001.06`
+inline constexpr std::string_view kPain00100107 = "pain.001.001.07";  ///< `pain.001.001.07`
+inline constexpr std::string_view kPain00100108 = "pain.001.001.08";  ///< `pain.001.001.08`
+inline constexpr std::string_view kPain00100109 = "pain.001.001.09";  ///< `pain.001.001.09`
+inline constexpr std::string_view kPain00100110 = "pain.001.001.10";  ///< `pain.001.001.10`
+inline constexpr std::string_view kPain00100111 = "pain.001.001.11";  ///< `pain.001.001.11`
+inline constexpr std::string_view kPain00100112 = "pain.001.001.12";  ///< `pain.001.001.12`
+inline constexpr std::string_view kPain00100113 = "pain.001.001.13";  ///< `pain.001.001.13`
+inline constexpr std::string_view kPain00800102 = "pain.008.001.02";  ///< `pain.008.001.02`
+inline constexpr std::string_view kPain00800108 = "pain.008.001.08";  ///< `pain.008.001.08`
 }  // namespace message_type
 
 /// One request-validation error in a 422 `detail` array (FastAPI's
 /// `{loc, msg, type, input, ctx}` shape).
 struct ValidationError {
-  nlohmann::json loc;  // array of strings and integers
-  std::string msg;
-  std::string type;
-  std::optional<nlohmann::json> input;
-  std::optional<nlohmann::json> ctx;
+  nlohmann::json loc;                   ///< Where: an array of strings and integers.
+  std::string msg;                      ///< What is wrong, in words.
+  std::string type;                     ///< The error kind, such as `enum`.
+  std::optional<nlohmann::json> input;  ///< The rejected input, when sent.
+  std::optional<nlohmann::json> ctx;    ///< Extra context, such as the allowed values.
 };
 
 /// Base class of every error this SDK throws.
@@ -70,6 +70,8 @@ class Error : public std::runtime_error {
 /// The server answered with a non-2xx status.
 class ApiError : public Error {
  public:
+  /// An error for HTTP `status` with the parsed `detail`; `what()` names
+  /// only the status.
   ApiError(long status, nlohmann::json detail);
 
   /// The HTTP status code.
@@ -108,17 +110,17 @@ class NoDocument : public TransportError {
 
 /// One HTTP exchange, as the client hands it to a Transport.
 struct HttpRequest {
-  std::string method;
-  std::string url;
-  std::vector<std::pair<std::string, std::string>> headers;
-  std::optional<std::string> body;
-  std::chrono::milliseconds timeout{0};
+  std::string method;                                        ///< `GET`, `POST`, ...
+  std::string url;                                           ///< The absolute URL.
+  std::vector<std::pair<std::string, std::string>> headers;  ///< Name and value, in order.
+  std::optional<std::string> body;                           ///< The JSON body, when any.
+  std::chrono::milliseconds timeout{0};                      ///< Zero means none.
 };
 
 /// The status, raw body and headers of an HTTP response.
 struct HttpResponse {
-  long status = 0;
-  std::string body;
+  long status = 0;   ///< The HTTP status code.
+  std::string body;  ///< The raw body.
   /// Response headers in the order received, names as the server sent
   /// them. A Transport that does not collect headers leaves this empty.
   std::vector<std::pair<std::string, std::string>> headers{};
@@ -189,9 +191,9 @@ struct ClientOptions {
 
 /// `GET /api/v1/health`.
 struct HealthResponse {
-  std::string status;
-  std::string version;
-  std::string message;
+  std::string status;   ///< `healthy` when the server is up.
+  std::string version;  ///< The server's pain001 version.
+  std::string message;  ///< A human-readable status line.
 };
 
 /// One rejected input row: the column, what is wrong with it, and the
@@ -199,19 +201,19 @@ struct HealthResponse {
 /// openapi.json names this shape `RowError` (kit_version 1 called it
 /// `ValidationError`, colliding with FastAPI's request-error model).
 struct RowError {
-  std::string field;
-  std::string message;
-  nlohmann::json value;
+  std::string field;     ///< The column or JSON path.
+  std::string message;   ///< What is wrong with it.
+  nlohmann::json value;  ///< The offending value; null when absent.
 };
 
 /// `POST /api/v1/ui/validate`.
 struct ValidationResponse {
-  bool is_valid = false;
-  std::int64_t total_rows = 0;
-  std::int64_t valid_rows = 0;
-  std::int64_t invalid_rows = 0;
-  std::vector<RowError> errors;
-  std::vector<nlohmann::json> scheme_violations;
+  bool is_valid = false;                          ///< True when every row and rule passed.
+  std::int64_t total_rows = 0;                    ///< Rows read.
+  std::int64_t valid_rows = 0;                    ///< Rows that passed.
+  std::int64_t invalid_rows = 0;                  ///< Rows that failed.
+  std::vector<RowError> errors;                   ///< One entry per rejected row value.
+  std::vector<nlohmann::json> scheme_violations;  ///< Findings of the requested scheme.
 };
 
 /// `POST /api/v1/ui/generate`. A returned response always carries the
@@ -219,12 +221,12 @@ struct ValidationResponse {
 /// `Client::generate` throws GenerationRefused with this body instead,
 /// and a 2xx reply without the XML throws NoDocument.
 struct GenerateResponse {
-  bool success = false;
-  std::string message;
-  std::optional<std::string> filename;
-  std::optional<std::string> xml;
-  std::vector<RowError> validation_errors;
-  std::vector<nlohmann::json> scheme_violations;
+  bool success = false;                           ///< True when a document was generated.
+  std::string message;                            ///< A human-readable summary.
+  std::optional<std::string> filename;            ///< The suggested file name.
+  std::optional<std::string> xml;                 ///< The generated document.
+  std::vector<RowError> validation_errors;        ///< Row findings of a refusal.
+  std::vector<nlohmann::json> scheme_violations;  ///< Scheme findings of a refusal.
 };
 
 /// The server refused to generate a file (HTTP 422 with `success:
@@ -235,6 +237,8 @@ struct GenerateResponse {
 /// request (FastAPI's `detail` array) stays a plain ApiError.
 class GenerationRefused : public ApiError {
  public:
+  /// A refusal with HTTP `status`, the whole body as `detail`, and that
+  /// body decoded as `response`.
   GenerationRefused(long status, nlohmann::json detail, GenerateResponse response);
 
   /// The refusal body decoded.
@@ -246,54 +250,54 @@ class GenerationRefused : public ApiError {
 
 /// One problem one rung of `check` found.
 struct CheckFinding {
-  std::string rung;
-  std::string rule;
-  std::string severity;
-  std::string message;
-  std::optional<std::string> location;
+  std::string rung;                     ///< The rung that found it (`xsd`, `mdr`, ...).
+  std::string rule;                     ///< The rule identifier.
+  std::string severity;                 ///< `error` or `warning`.
+  std::string message;                  ///< What is wrong.
+  std::optional<std::string> location;  ///< Where in the document, when known.
 };
 
 /// `POST /api/v1/check`.
 struct CheckResponse {
-  std::string message_type;
-  bool passed = false;
-  std::int64_t errors = 0;
-  std::int64_t warnings = 0;
-  std::vector<std::string> rungs;
-  std::vector<CheckFinding> findings;
+  std::string message_type;            ///< The message type detected.
+  bool passed = false;                 ///< True when no rung found an error.
+  std::int64_t errors = 0;             ///< Findings with severity `error`.
+  std::int64_t warnings = 0;           ///< Findings with severity `warning`.
+  std::vector<std::string> rungs;      ///< The rungs that ran, in order.
+  std::vector<CheckFinding> findings;  ///< Every finding.
 };
 
 /// One entry of `GET /api/v1/faces`.
 struct FaceInfo {
-  std::string name;
-  std::string description;
-  std::vector<std::string> bindings;
+  std::string name;                   ///< The face name `project_face` takes.
+  std::string description;            ///< What the face is.
+  std::vector<std::string> bindings;  ///< Extra fields the face accepts.
 };
 
 /// What a face projection carried and what it did not.
 struct LossReport {
-  std::string face;
-  std::int64_t total_source_elements = 0;
-  std::int64_t mapped_count = 0;
-  std::int64_t unmapped_count = 0;
-  bool is_lossless = false;
-  double loss_ratio = 0.0;
-  std::vector<std::string> mapped_paths;
-  std::vector<std::string> unmapped_paths;
+  std::string face;                         ///< The face projected to.
+  std::int64_t total_source_elements = 0;   ///< Elements in the source document.
+  std::int64_t mapped_count = 0;            ///< Elements the face carries.
+  std::int64_t unmapped_count = 0;          ///< Elements it does not.
+  bool is_lossless = false;                 ///< True when nothing was dropped.
+  double loss_ratio = 0.0;                  ///< `unmapped_count / total_source_elements`.
+  std::vector<std::string> mapped_paths;    ///< Paths that were carried.
+  std::vector<std::string> unmapped_paths;  ///< Paths that were dropped.
 };
 
 /// `POST /api/v1/faces/{face}`.
 struct FaceResponse {
-  std::string face;
-  std::string version;
-  nlohmann::json payload;
-  LossReport loss_report;
+  std::string face;        ///< The face projected to.
+  std::string version;     ///< The source message type.
+  nlohmann::json payload;  ///< The projected JSON.
+  LossReport loss_report;  ///< What the projection carried and dropped.
 };
 
 /// The status and parsed JSON body of a raw request (null when empty).
 struct Response {
-  long status = 0;
-  nlohmann::json body;
+  long status = 0;      ///< The HTTP status code.
+  nlohmann::json body;  ///< The parsed body; null when empty.
 };
 
 /// A client for one pain001 server. Movable, not copyable.
@@ -308,26 +312,43 @@ class Client {
 
   Client(const Client&) = delete;
   Client& operator=(const Client&) = delete;
+  /// Takes over the other client's transport and connection.
   Client(Client&&) noexcept;
+  /// Takes over the other client's transport and connection.
   Client& operator=(Client&&) noexcept;
   ~Client();
 
+  /// `GET /api/v1/health`: is the server up, and which version is it.
+  /// Retried when a RetryPolicy is set.
   [[nodiscard]] HealthResponse health();
 
+  /// `POST /api/v1/ui/validate`: checks `content` (CSV, JSON or JSONL
+  /// text named `filename`) against `message_type` and, when given, the
+  /// `scheme` rulebook. A file the server cannot read throws ApiError 400.
   [[nodiscard]] ValidationResponse validate(
       std::string_view content, std::string_view filename, std::string_view message_type,
       const std::optional<std::string>& scheme = std::nullopt);
 
+  /// `POST /api/v1/ui/generate`: the same input to `message_type` XML.
+  /// The returned response always carries the XML; a refusal throws
+  /// GenerationRefused, a 2xx reply without XML throws NoDocument.
   [[nodiscard]] GenerateResponse generate(std::string_view content, std::string_view filename,
                                           std::string_view message_type,
                                           const std::optional<std::string>& scheme = std::nullopt);
 
+  /// `POST /api/v1/check`: runs an XML document through the server's
+  /// rungs (XSD, MDR, the `scheme` rules, the `schematron` set).
   [[nodiscard]] CheckResponse check(std::string_view xml,
                                     const std::optional<std::string>& scheme = std::nullopt,
                                     const std::optional<std::string>& schematron = std::nullopt);
 
+  /// `GET /api/v1/faces`: the faces `project_face` accepts. Retried when
+  /// a RetryPolicy is set.
   [[nodiscard]] std::vector<FaceInfo> faces();
 
+  /// `POST /api/v1/faces/{face}`: projects a pain.001 document to `face`
+  /// (percent-encoded as one path segment), optionally at `version` and
+  /// with extra `bindings`, and reports what was not carried.
   [[nodiscard]] FaceResponse project_face(
       std::string_view face, std::string_view xml,
       const std::optional<std::string>& version = std::nullopt,
