@@ -26,6 +26,8 @@ COV_DIR      ?= build-coverage
 PKG_DIR      ?= build-package
 BENCH_DIR    ?= build-bench
 BENCH_ARGS   ?=
+DOXYGEN      ?= doxygen
+MKDOCS       ?= mkdocs
 COV_FLAGS     = -fprofile-instr-generate -fcoverage-mapping
 LLVM_COV     ?= $(shell command -v llvm-cov 2>/dev/null || xcrun --find llvm-cov 2>/dev/null)
 LLVM_PROFDATA ?= $(shell command -v llvm-profdata 2>/dev/null || xcrun --find llvm-profdata 2>/dev/null)
@@ -33,7 +35,7 @@ LLVM_PROFDATA ?= $(shell command -v llvm-profdata 2>/dev/null || xcrun --find ll
 SOURCES = $(shell find include src tests examples fuzz benchmarks -type f \( -name '*.cpp' -o -name '*.hpp' \) | sort)
 TIDY_SOURCES = $(shell find src tests examples fuzz benchmarks -type f -name '*.cpp' | sort)
 
-.PHONY: check configure build test conformance examples bench regression demo fuzz format format-check filesize versions complexity coverage package-test tidy clean
+.PHONY: check configure build test conformance examples bench regression docs demo fuzz format format-check filesize versions complexity coverage package-test tidy clean
 
 check: versions format-check filesize complexity build test tidy
 
@@ -76,6 +78,14 @@ bench:
 # on a free loopback port and stops (scripts/regression.sh).
 regression:
 	./scripts/regression.sh
+
+# The manual: Doxygen renders the header into docs/api/ (warnings fail),
+# then MkDocs builds site/ strictly. Install MkDocs with
+# `pip install --require-hashes -r docs/requirements.txt`.
+docs:
+	rm -rf docs/api
+	$(DOXYGEN) Doxyfile
+	$(MKDOCS) build --strict
 
 # libFuzzer with ASan and UBSan, FUZZ_SECONDS per target. New inputs go
 # to $(FUZZ_DIR)/corpus, crash reproducers to $(FUZZ_DIR)/artifacts.
@@ -170,4 +180,4 @@ tidy: configure
 	else echo "$(CLANG_TIDY) not found: clang-tidy skipped (CI runs it)"; fi
 
 clean:
-	rm -rf $(BUILD_DIR) $(FUZZ_DIR)
+	rm -rf $(BUILD_DIR) $(FUZZ_DIR) $(COV_DIR) $(PKG_DIR) $(BENCH_DIR) build-demo build-api docs/api site

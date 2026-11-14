@@ -1,0 +1,13 @@
+# SPDX-License-Identifier: Apache-2.0 OR MIT
+#
+# The manual's build inputs (MkDocs Material). Edit this file, then
+# regenerate the hash-pinned lock that CI installs with --require-hashes:
+#
+#   uv pip compile --generate-hashes --python-version 3.12 --python-platform linux docs/requirements.in -o docs/requirements.txt
+mkdocs==1.6.1
+mkdocs-material==9.7.7
+# Pulled in by mkdocs-material; 11.0.0 and below carry GHSA-gm37-52c6-37mw
+# and GHSA-9xwg-3r6f-jcx2, fixed in 11.0.1.
+pymdown-extensions>=11.0.1
+# certifi before 2026.10.19 carries PYSEC-2026-4320 (GHSA-6q48-6c7w-9gw2).
+certifi>=2026.10.19
