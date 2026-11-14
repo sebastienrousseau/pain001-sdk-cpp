@@ -6,7 +6,7 @@ All notable changes to this project are recorded here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions
 advance in `0.0.1` steps in lockstep with the pain001 suite.
 
-## [Unreleased]
+## [0.0.88] - 2026-11-14
 
 The first release will be 0.0.88, in lockstep with the pain001 suite.
 
@@ -98,6 +98,8 @@ The first release will be 0.0.88, in lockstep with the pain001 suite.
 
 ### Changed
 
+- CI tests against pain001 0.0.88, the release this SDK ships with
+  (`ci/server-requirements.in`).
 - Version 0.0.88 in every version-bearing file, the first tagged
   release of this SDK (0.0.87 was prepared but never tagged).
 - The CI conformance job starts the server with a synthetic

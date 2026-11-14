@@ -21,7 +21,7 @@ body:
     id: server_version
     attributes:
       label: pain001 server version (GET /api/v1/health)
-      placeholder: "0.0.87"
+      placeholder: "0.0.88"
     validations:
       required: true
   - type: input
