@@ -22,6 +22,7 @@ FUZZ_SECONDS ?= 30
 FUZZ_FLAGS   ?= -fsanitize=address,undefined -fno-sanitize-recover=undefined
 FUZZ_TARGETS  = response error
 COV_DIR      ?= build-coverage
+PKG_DIR      ?= build-package
 COV_FLAGS     = -fprofile-instr-generate -fcoverage-mapping
 LLVM_COV     ?= $(shell command -v llvm-cov 2>/dev/null || xcrun --find llvm-cov 2>/dev/null)
 LLVM_PROFDATA ?= $(shell command -v llvm-profdata 2>/dev/null || xcrun --find llvm-profdata 2>/dev/null)
@@ -29,7 +30,7 @@ LLVM_PROFDATA ?= $(shell command -v llvm-profdata 2>/dev/null || xcrun --find ll
 SOURCES = $(shell find include src tests examples fuzz -type f \( -name '*.cpp' -o -name '*.hpp' \) | sort)
 TIDY_SOURCES = $(shell find src tests examples fuzz -type f -name '*.cpp' | sort)
 
-.PHONY: check configure build test conformance demo fuzz format format-check filesize versions complexity coverage tidy clean
+.PHONY: check configure build test conformance demo fuzz format format-check filesize versions complexity coverage package-test tidy clean
 
 check: versions format-check filesize complexity build test tidy
 
@@ -103,6 +104,19 @@ coverage:
 	$(LLVM_COV) export $(COV_DIR)/tests/pain001_sdk_tests -instr-profile=$(COV_DIR)/coverage.profdata \
 	  -ignore-filename-regex='/(_deps|tests|fuzz|examples|benchmarks)/' > $(COV_DIR)/coverage.json
 	python3 scripts/coverage-gate.py $(COV_DIR)/coverage.lcov $(COV_DIR)/coverage.json
+
+# Install into a staging prefix and build tests/package against it with
+# find_package(pain001_sdk CONFIG): the installed package config works.
+package-test:
+	$(CMAKE) -S . -B $(PKG_DIR)/sdk -DCMAKE_BUILD_TYPE=Release -DPAIN001_SDK_BUILD_TESTS=OFF \
+	  -DPAIN001_SDK_BUILD_EXAMPLES=OFF $(CMAKE_ARGS)
+	$(CMAKE) --build $(PKG_DIR)/sdk --parallel
+	rm -rf $(PKG_DIR)/prefix
+	$(CMAKE) --install $(PKG_DIR)/sdk --prefix $(abspath $(PKG_DIR))/prefix
+	$(CMAKE) -S tests/package -B $(PKG_DIR)/consumer -DCMAKE_BUILD_TYPE=Release \
+	  -DCMAKE_PREFIX_PATH=$(abspath $(PKG_DIR))/prefix
+	$(CMAKE) --build $(PKG_DIR)/consumer
+	$(PKG_DIR)/consumer/consumer
 
 format:
 	$(CLANG_FORMAT) -i $(SOURCES)
