@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: Apache-2.0 OR MIT
+#
+# Machine-readable licensing, per the REUSE specification (`reuse lint`
+# runs in the docs-lint workflow). Source files carry an SPDX header; this
+# file adds the copyright line to every file and covers the files whose
+# format has no room for a header.
+
+version = 1
+SPDX-PackageName = "pain001-sdk-cpp"
+SPDX-PackageSupplier = "Sebastien Rousseau <sebastian.rousseau@gmail.com>"
+SPDX-PackageDownloadLocation = "https://github.com/sebastienrousseau/pain001-sdk-cpp"
+
+# Everything in this repository: the copyright holder, and the licence for
+# files that cannot carry a header (the demo GIF, JSON fixtures, the fuzz
+# corpus, the server lock file).
+[[annotations]]
+path = ["**"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 Sebastien Rousseau <sebastian.rousseau@gmail.com>"
+SPDX-License-Identifier = "Apache-2.0 OR MIT"
+
+# The conformance kit, vendored byte for byte from core, under core's
+# copyright line (LICENSE-MIT in sebastienrousseau/pain001).
+[[annotations]]
+path = ["conformance/**"]
+precedence = "override"
+SPDX-FileCopyrightText = "2023-2026 Pain001"
+SPDX-License-Identifier = "Apache-2.0 OR MIT"
+
+# The Developer Certificate of Origin, reproduced verbatim as its own
+# notice allows.
+[[annotations]]
+path = ["DCO.txt"]
+precedence = "override"
+SPDX-FileCopyrightText = "2004, 2006 The Linux Foundation and its contributors"
+SPDX-License-Identifier = "LicenseRef-DCO-verbatim"
