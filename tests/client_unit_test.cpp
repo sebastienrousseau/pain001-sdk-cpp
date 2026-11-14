@@ -6,6 +6,8 @@
 #include <gtest/gtest.h>
 
 #include <chrono>
+#include <cstdint>
+#include <limits>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -222,6 +224,34 @@ TEST(Decoding, GenerateRequestErrorStaysAPlainApiError) {
       EXPECT_EQ(error.status(), status);
     }
   }
+}
+
+// A count the server sends must fit std::int64_t. nlohmann/json converts
+// with a plain cast: undefined behaviour for 1e300, and a wrap to a
+// negative number for an unsigned value above INT64_MAX.
+TEST(Decoding, CountsOutsideInt64AreTransportErrors) {
+  const auto state = std::make_shared<FakeState>();
+  const std::string face = R"({"face":"f","version":"v","payload":{},"loss_report":{"face":"f",
+    "total_source_elements":1,"mapped_count":1e19,"unmapped_count":0,"is_lossless":true,
+    "loss_ratio":0,"mapped_paths":[],"unmapped_paths":[]}})";
+  Client client =
+      fake_client(state, {{200, R"({"is_valid":true,"total_rows":1e300})"},
+                          {200, R"({"is_valid":true,"total_rows":1,"valid_rows":-1e300})"},
+                          {200, R"({"is_valid":true,"total_rows":18446744073709551615})"},
+                          {200, R"({"message_type":"m","passed":true,"errors":9223372036854775808,
+                "warnings":0,"rungs":[],"findings":[]})"},
+                          {200, face},
+                          {200, R"({"is_valid":true,"total_rows":9223372036854775807,
+                "valid_rows":-9223372036854775808,"invalid_rows":2.0})"}});
+  EXPECT_THROW(static_cast<void>(client.validate("c", "f.csv", "p")), TransportError);
+  EXPECT_THROW(static_cast<void>(client.validate("c", "f.csv", "p")), TransportError);
+  EXPECT_THROW(static_cast<void>(client.validate("c", "f.csv", "p")), TransportError);
+  EXPECT_THROW(static_cast<void>(client.check("<x/>")), TransportError);
+  EXPECT_THROW(static_cast<void>(client.project_face("f", "<x/>")), TransportError);
+  const ValidationResponse edge = client.validate("c", "f.csv", "p");
+  EXPECT_EQ(edge.total_rows, std::numeric_limits<std::int64_t>::max());
+  EXPECT_EQ(edge.valid_rows, std::numeric_limits<std::int64_t>::min());
+  EXPECT_EQ(edge.invalid_rows, 2);
 }
 
 TEST(Decoding, CheckWithFindings) {

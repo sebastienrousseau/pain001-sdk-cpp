@@ -40,3 +40,12 @@ The first release will be 0.0.86, with pain001 0.0.86.
   `FetchContent`, pinned by SHA-256), a `make check` gate, CI with lint,
   GCC and sanitizer builds and a conformance job against a hash-pinned
   `pain001[api]==0.0.86` server.
+
+### Fixed
+
+- A count in a response (`total_rows`, `valid_rows`, `invalid_rows`,
+  `errors`, `warnings`, and the `LossReport` counts) that does not fit
+  `std::int64_t` is now a `TransportError` ("unexpected shape"). Before,
+  a float such as `1e300` was converted with undefined behaviour, and an
+  integer above `INT64_MAX` wrapped to a negative count. Found by the
+  response fuzz target.
