@@ -1,0 +1,35 @@
+# SPDX-License-Identifier: Apache-2.0 OR MIT
+#
+# Fast checks before a commit: `pre-commit install`, then they run on
+# every `git commit`. CI runs the full gate; these catch the cheap
+# mistakes first. Repositories are pinned to commit SHAs.
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: 3e8a8703264a2f4a69428a0aa4dcb512790b2c8c # v6.0.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: ^(conformance/|benchmarks/responses/|fuzz/corpus/)
+      - id: end-of-file-fixer
+        exclude: ^(conformance/|benchmarks/responses/|fuzz/corpus/|\.github/demo\.gif$)
+      - id: check-yaml
+      - id: check-merge-conflict
+  - repo: https://github.com/codespell-project/codespell
+    rev: 57b21406f092110c18776e39b0bda50d37c945c8 # v2.4.3
+    hooks:
+      - id: codespell
+  - repo: https://github.com/fsfe/reuse-tool
+    rev: a1bb792acda6fd0724936b4ebbdbc8eceb9c0459 # v6.2.0
+    hooks:
+      - id: reuse-lint-file
+  - repo: local
+    hooks:
+      - id: clang-format
+        name: clang-format (18)
+        entry: clang-format --dry-run --Werror
+        language: system
+        types_or: [c++]
+      - id: verify-release-versions
+        name: version files agree
+        entry: scripts/verify-release-versions
+        language: script
+        pass_filenames: false
