@@ -14,6 +14,7 @@
 
 #include "models.hpp"
 #include "pain001/client.hpp"
+#include "retry.hpp"
 
 namespace pain001 {
 namespace {
@@ -24,11 +25,25 @@ bool starts_with(std::string_view text, std::string_view prefix) {
   return text.substr(0, prefix.size()) == prefix;
 }
 
+bool iequals(std::string_view a, std::string_view b) {
+  if (a.size() != b.size()) {
+    return false;
+  }
+  for (std::size_t i = 0; i < a.size(); ++i) {
+    if (std::tolower(static_cast<unsigned char>(a[i])) !=
+        std::tolower(static_cast<unsigned char>(b[i]))) {
+      return false;
+    }
+  }
+  return true;
+}
+
 ClientOptions checked(ClientOptions options) {
   if (!starts_with(options.base_url, "http://") && !starts_with(options.base_url, "https://")) {
     throw std::invalid_argument("base_url must start with http:// or https://");
   }
-  while (!options.base_url.empty() && options.base_url.back() == '/') {
+  // Never empties the URL: it starts with "http://" or "https://".
+  while (options.base_url.back() == '/') {
     options.base_url.pop_back();
   }
   if (options.api_key &&
@@ -37,6 +52,9 @@ ClientOptions checked(ClientOptions options) {
   }
   if (options.timeout.count() < 0) {
     throw std::invalid_argument("timeout must not be negative");
+  }
+  if (options.retry) {
+    detail::check_retry_policy(*options.retry);
   }
   return options;
 }
@@ -141,6 +159,15 @@ json file_payload(std::string_view content, std::string_view filename,
 
 }  // namespace
 
+std::optional<std::string> HttpResponse::header(std::string_view name) const {
+  for (const auto& [key, value] : headers) {
+    if (iequals(key, name)) {
+      return value;
+    }
+  }
+  return std::nullopt;
+}
+
 ApiError::ApiError(long status, nlohmann::json detail)
     : Error("pain001 API returned HTTP " + std::to_string(status)),
       status_(status),
@@ -190,6 +217,9 @@ HttpResponse Client::send(std::string_view method, std::string_view path,
   if (body) {
     request.body = serialise(*body);
     request.headers.emplace_back("Content-Type", "application/json");
+  }
+  if (options_.retry && method == "GET") {
+    return detail::send_with_retry(*transport_, request, *options_.retry);
   }
   return transport_->send(request);
 }

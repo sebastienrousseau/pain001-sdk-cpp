@@ -1,0 +1,29 @@
+# SPDX-License-Identifier: Apache-2.0 OR MIT
+#
+# The API reference for the public header, rendered into docs/api/ by
+# `make docs` before MkDocs builds the manual. Every public member must
+# be documented: a warning fails the build.
+PROJECT_NAME           = pain001-sdk-cpp
+PROJECT_NUMBER         = 0.0.88
+PROJECT_BRIEF          = "A typed C++17 client for the pain001 REST API"
+INPUT                  = include/pain001/client.hpp
+OUTPUT_DIRECTORY       = docs
+HTML_OUTPUT            = api
+GENERATE_HTML          = YES
+GENERATE_LATEX         = NO
+GENERATE_TREEVIEW      = YES
+HAVE_DOT               = NO
+EXTRACT_ALL            = NO
+EXTRACT_PRIVATE        = NO
+HIDE_UNDOC_MEMBERS     = NO
+WARN_IF_UNDOCUMENTED   = YES
+WARN_IF_DOC_ERROR      = YES
+WARN_NO_PARAMDOC       = NO
+WARN_AS_ERROR          = FAIL_ON_WARNINGS
+QUIET                  = YES
+JAVADOC_AUTOBRIEF      = YES
+FULL_PATH_NAMES        = YES
+STRIP_FROM_PATH        = include
+STRIP_FROM_INC_PATH    = include
+SOURCE_BROWSER         = YES
+HTML_FOOTER            = docs/doxygen-footer.html

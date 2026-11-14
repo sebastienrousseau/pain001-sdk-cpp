@@ -12,7 +12,7 @@ here should make the client more correct, safer or easier to use.
 Everything CI checks, you can run locally:
 
 ```sh
-make check            # clang-format, file size, -Werror build, ctest, clang-tidy
+make check            # versions, format, file size, complexity, -Werror build, ctest, clang-tidy
 ```
 
 `make check` skips clang-format and clang-tidy, and says so, when they
@@ -40,14 +40,37 @@ make fuzz CXX=clang++ FUZZ_SECONDS=60   # ASan and UBSan, per target
 A reproducer lands in `build-fuzz/artifacts/`. Add an input that found a
 bug to `fuzz/corpus/<target>/` with the fix, and a unit test for it.
 
+## The README demo
+
+`make demo` renders `.github/demo.gif` from `.github/demo.tape` with
+[VHS](https://github.com/charmbracelet/vhs) (it needs `vhs`, `ttyd` and
+`ffmpeg`). It builds `examples/basic.cpp` into `build-demo/`, starts
+`pain001 serve` on 127.0.0.1:18088 off screen, runs the example against
+the kit's synthetic fixtures, and stops the server. The server comes
+from `PAIN001_SERVER`, or `pain001` on `PATH`; install the same
+hash-pinned server CI uses:
+
+```sh
+uv venv -p 3.12 /tmp/pain001-demo-srv
+VIRTUAL_ENV=/tmp/pain001-demo-srv uv pip install --require-hashes --no-deps \
+  -r ci/server-requirements.txt
+make demo PAIN001_SERVER=/tmp/pain001-demo-srv/bin/pain001
+```
+
+Re-render the GIF in the same change as anything that alters what it
+shows, and say in the commit what it shows.
+
 ## Rules
 
 - **`conformance/` is vendored from core.** Never edit it here: a change
   to a case or fixture is made in core and re-vendored, and the
   `Kit.MatchesItsPinnedSha256Sums` test fails on any local edit.
-- **Complexity ceilings.** Every function stays within cognitive
-  complexity 15, 60 lines and 10 branches (clang-tidy), and every file
-  within 500 lines (`scripts/check-file-size.sh`).
+- **Complexity ceilings.** Every function stays within cyclomatic 10,
+  cognitive 15, Halstead difficulty 30 and 60 lines (`make complexity`,
+  rust-code-analysis; clang-tidy checks cognitive complexity and length
+  too), and every file within 500 lines (`scripts/check-file-size.sh`).
+- **100% coverage.** `make coverage` fails below 100% of lines and
+  branch outcomes in `include/` and `src/`; add the test with the code.
 - **No new warnings, no suppressions.** The build uses
   `-Wall -Wextra -Wpedantic -Werror`; fix the cause rather than adding
   `NOLINT` or a pragma.
@@ -63,10 +86,12 @@ that explains why. Every commit carries a `Signed-off-by:` trailer
 
 ## Versioning
 
-The version is restated in `CMakeLists.txt` (`project(... VERSION)`),
-`include/pain001/client.hpp` (`kSdkVersion`), `CITATION.cff` and
-`CHANGELOG.md`. The `Version.HeaderMatchesTheBuild` test checks the first
-two agree. **Versions increment by 0.0.1**, in lockstep with the suite.
+The version lives in `CMakeLists.txt` (`project(... VERSION)`) and is
+restated in the files `scripts/verify-release-versions` lists; `make
+check` and CI run it, and the `Version.HeaderMatchesTheBuild` test
+checks the header against the build. **Versions increment by 0.0.1**,
+in lockstep with the suite. [DEVELOPMENT.md](DEVELOPMENT.md) describes
+the release model.
 
 ## Licence
 

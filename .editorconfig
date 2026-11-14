@@ -1,0 +1,35 @@
+# SPDX-License-Identifier: Apache-2.0 OR MIT
+#
+# Editor defaults that match clang-format (.clang-format) and the
+# scripts' style. https://editorconfig.org
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 2
+
+[*.{cpp,hpp}]
+max_line_length = 100
+
+[*.py]
+indent_size = 4
+
+[{Makefile,*.mk}]
+indent_style = tab
+
+[*.md]
+trim_trailing_whitespace = false
+
+# Vendored from core, recorded server output, fuzz inputs and lock files
+# are kept byte for byte.
+[{conformance/**,benchmarks/responses/**,fuzz/corpus/**,ci/server-requirements.txt,docs/requirements.txt,LICENSES/**}]
+charset = unset
+end_of_line = unset
+insert_final_newline = unset
+trim_trailing_whitespace = unset
+indent_style = unset
+indent_size = unset

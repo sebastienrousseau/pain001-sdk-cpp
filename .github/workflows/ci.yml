@@ -1,8 +1,9 @@
 # SPDX-License-Identifier: Apache-2.0 OR MIT
 #
-# Lint (clang-format, file size, clang-tidy with the complexity
-# ceilings), build and unit tests on GCC and Clang (Clang with ASan and
-# UBSan), and the conformance kit against a live `pain001 serve`.
+# Lint (version files, clang-format, file size, the complexity ceilings
+# measured by rust-code-analysis, and clang-tidy), build and unit tests
+# on GCC and Clang (Clang with ASan and UBSan), 100% line and branch
+# coverage, and the conformance kit against a live `pain001 serve`.
 name: CI
 
 on:
@@ -41,8 +42,28 @@ jobs:
           clang-format-18 --version
           clang-tidy-18 --version
 
+      - name: Version files agree
+        run: make versions
+
+      - name: Shell scripts (shellcheck)
+        run: shellcheck scripts/*.sh scripts/verify-release-versions
+
       - name: Format and file size
         run: make format-check filesize CLANG_FORMAT=clang-format-18
+
+      - name: Cache rust-code-analysis-cli
+        id: rca-cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cargo/bin/rust-code-analysis-cli
+          key: rca-0.0.25-${{ runner.os }}
+
+      - name: Install rust-code-analysis-cli
+        if: steps.rca-cache.outputs.cache-hit != 'true'
+        run: cargo install rust-code-analysis-cli --version 0.0.25 --locked
+
+      - name: Complexity ceilings (cyclomatic, cognitive, Halstead, lines)
+        run: make complexity
 
       - name: clang-tidy (bugprone, performance, complexity ceilings)
         run: make tidy CLANG_TIDY=clang-tidy-18
@@ -79,8 +100,57 @@ jobs:
         run: |
           make test CMAKE_ARGS="-DCMAKE_CXX_FLAGS='$FLAGS' -DCMAKE_EXE_LINKER_FLAGS='$FLAGS'"
 
-      - name: The example was built
-        run: test -x build/pain001_basic
+      - name: The examples were built
+        run: for name in basic health validate check faces project_face raw_request errors timeouts_retries api_key; do test -x "build/pain001_$name"; done
+
+  package:
+    name: Installed CMake package (find_package)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install libcurl headers
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libcurl4-openssl-dev
+
+      - name: Install to a prefix, build and run a consumer against it
+        run: make package-test
+
+  coverage:
+    name: Coverage (100% line and branch)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      # GoogleTest also enables C, and the coverage link flags are clang's.
+      CC: clang-18
+      CXX: clang++-18
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install libcurl headers
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libcurl4-openssl-dev
+
+      - name: Unit tests with source-based coverage, gate at 100%
+        run: make coverage LLVM_COV=llvm-cov-18 LLVM_PROFDATA=llvm-profdata-18
+
+      - name: Upload the coverage report
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: coverage
+          path: |
+            build-coverage/coverage.lcov
+            build-coverage/coverage.json
+          if-no-files-found: ignore
+          retention-days: 14
 
   conformance:
     name: Conformance kit against pain001 serve
@@ -88,6 +158,9 @@ jobs:
     timeout-minutes: 20
     env:
       PAIN001_BASE_URL: http://127.0.0.1:8000
+      # A synthetic key: the server requires it, the tests and examples
+      # send it, and examples/api_key.cpp shows the 401 without it.
+      PAIN001_API_KEY: ci-synthetic-key
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -124,12 +197,83 @@ jobs:
       - name: Conformance cases and typed tests (fail on any skip)
         run: make conformance
 
-      - name: Example against the server
-        run: |
-          build/pain001_basic < conformance/fixtures/credit-transfer.pain.001.001.09.csv \
-            > "$RUNNER_TEMP/payments.out.xml"
-          grep -q '<NbOfTxs>5</NbOfTxs>' "$RUNNER_TEMP/payments.out.xml"
+      - name: Every example against the server
+        run: make examples
+
+      - name: Benchmark smoke run (client-side and loopback, not asserted)
+        run: make bench BENCH_ARGS=--benchmark_min_time=0.01s
 
       - name: Server log
         if: failure()
         run: cat "$RUNNER_TEMP/server.log"
+
+  regression:
+    name: make regression (installs, starts and stops its own server)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      CC: clang-18
+      CXX: clang++-18
+      LLVM_COV: llvm-cov-18
+      LLVM_PROFDATA: llvm-profdata-18
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
+
+      - name: Install libcurl headers
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libcurl4-openssl-dev
+
+      - name: make regression
+        run: make regression CLANG_FORMAT=clang-format-18 CLANG_TIDY=clang-tidy-18
+
+  api:
+    name: API breakage against the last tag
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Find the last release tag
+        id: baseline
+        run: |
+          tag=$(git describe --tags --abbrev=0 --match 'v*' HEAD 2>/dev/null || true)
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          if [ -z "$tag" ]; then
+            echo "No v* tag yet: the gate starts with the first release (docs/adr/0005)."
+            echo "Until then the check runs against main for information only."
+          fi
+
+      - name: Install abi-dumper, abi-compliance-checker and libcurl headers
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            abi-dumper abi-compliance-checker universal-ctags libcurl4-openssl-dev
+
+      - name: Source compatibility with the last tag (the gate)
+        if: steps.baseline.outputs.tag != ''
+        run: scripts/api-check.sh "${{ steps.baseline.outputs.tag }}"
+
+      # No tag yet: exercise the same check against main so the tooling is
+      # known to work before it gates; its result does not fail the job.
+      - name: Compatibility with main (informational, no tag yet)
+        if: steps.baseline.outputs.tag == ''
+        run: scripts/api-check.sh "$(git merge-base HEAD origin/main)" || echo "informational only"
+
+      - name: Upload the compatibility reports
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: api-check
+          path: build-api/
+          if-no-files-found: ignore
+          retention-days: 14

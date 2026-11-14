@@ -1,0 +1,8 @@
+# SPDX-License-Identifier: Apache-2.0 OR MIT
+#
+# codespell (docs-lint workflow and pre-commit). Skipped: build output,
+# generated docs, licence texts, lock files, binary fixtures, recorded
+# server responses and the conformance kit vendored from core.
+[codespell]
+skip = ./.git,./build,./build-*,./site,./docs/api,./LICENSES,./ci/server-requirements.txt,./docs/requirements.txt,./fuzz/corpus,./.github/demo.gif,./benchmarks/responses,./conformance
+check-hidden = true

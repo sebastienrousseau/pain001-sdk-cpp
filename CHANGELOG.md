@@ -8,7 +8,7 @@ advance in `0.0.1` steps in lockstep with the pain001 suite.
 
 ## [Unreleased]
 
-The first release will be 0.0.86, with pain001 0.0.86.
+The first release will be 0.0.88, in lockstep with the pain001 suite.
 
 ### Added
 
@@ -36,6 +36,11 @@ The first release will be 0.0.86, with pain001 0.0.86.
   and `validate-chaps-purpose-required`, and their fixtures.
 - `examples/basic.cpp`: generate a pain.001.001.09 file from the kit's
   credit-transfer fixture.
+- A README demo, `.github/demo.gif`, rendered by `make demo` from the
+  VHS tape `.github/demo.tape`: the example generates a pain.001.001.09
+  file from the kit's credit-transfer fixture and shows the server's
+  refusal of the bad-IBAN fixture, against a `pain001 serve` started on
+  loopback from `PAIN001_SERVER`.
 - CMake build (nlohmann/json 3.12.0 and GoogleTest 1.18.0 by
   `FetchContent`, pinned by SHA-256), a `make check` gate, CI with lint,
   GCC and sanitizer builds and a conformance job against a hash-pinned
@@ -49,6 +54,55 @@ The first release will be 0.0.86, with pain001 0.0.86.
   them; `make check` replays the seeds and `make fuzz` fuzzes. A `Fuzz`
   workflow runs each target for 60 seconds under ASan and UBSan on every
   pull request.
+- `scripts/verify-release-versions`, run by `make check` and the CI lint
+  job, fails when `include/pain001/client.hpp`, `CITATION.cff`,
+  `SECURITY.md`, the README install snippet, `KEYS.asc` or the bug
+  report template disagree with the version in `CMakeLists.txt`.
+
+- `RetryPolicy` (`ClientOptions::retry`, unset by default): opt-in
+  retries for `health()`, `faces()` and `request()` with GET, on no
+  response, 429 and 503, with exponential backoff, full jitter and
+  `Retry-After`; POST is never retried (docs/adr/0004).
+- `HttpResponse::headers` and `HttpResponse::header(name)`; the libcurl
+  transport collects response headers.
+- Install rules and a CMake package config: `find_package(pain001_sdk
+  0.0.88 CONFIG)` and `pain001::sdk` from an installed prefix, tested by
+  `make package-test` in CI.
+- An example per public method (`health`, `validate`, `check`,
+  `faces`, `project_face`, `raw_request`, `errors`, `timeouts_retries`,
+  `api_key`, beside `basic`), all run by `make examples` in CI against a
+  server started with an API key.
+- Google Benchmark benchmarks (`PAIN001_SDK_BUILD_BENCHMARKS`, off by
+  default): client-side cost and a loopback round trip per method;
+  `make bench`, smoke-run in CI; results in docs/BENCHMARKS.md.
+- `make coverage`: 100% line and branch coverage of `include/` and
+  `src/`, enforced in CI, with inline exclusions only (one).
+- `make complexity`: cyclomatic, cognitive, Halstead and length
+  ceilings per function (rust-code-analysis), enforced in CI.
+- `make regression`: installs, starts and stops a pinned server and
+  runs every gate against it; a CI job runs it.
+- A tag-triggered release workflow with a dry run: source archive,
+  CycloneDX SBOM, SHA256SUMS, build provenance attestation and the
+  GitHub release. No package registry.
+- An API compatibility check against the last tag
+  (abi-compliance-checker, source compatibility; docs/adr/0005).
+- A user manual (MkDocs Material) with a Doxygen API reference, built
+  strictly in CI and deployed to GitHub Pages from main; every public
+  member of the header is documented.
+- DEVELOPMENT.md, GOVERNANCE.md, SUPPORT.md, docs/ARCHITECTURE.md,
+  docs/ROADMAP.md, docs/packaging.md and decision records in
+  docs/adr/; the ecosystem comparison now covers all five SDKs.
+- REUSE compliance (REUSE.toml, LICENSES/), codespell, a README
+  template check and lychee in the docs-lint workflow;
+  `.editorconfig`, `.pre-commit-config.yaml` and a devcontainer.
+
+### Changed
+
+- Version 0.0.88 in every version-bearing file, the first tagged
+  release of this SDK (0.0.87 was prepared but never tagged).
+- The CI conformance job starts the server with a synthetic
+  `PAIN001_API_KEY`, so the kit, the typed tests and the examples go
+  through bearer authentication.
 
 ### Fixed
 
