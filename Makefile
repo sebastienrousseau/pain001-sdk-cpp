@@ -33,7 +33,7 @@ LLVM_PROFDATA ?= $(shell command -v llvm-profdata 2>/dev/null || xcrun --find ll
 SOURCES = $(shell find include src tests examples fuzz benchmarks -type f \( -name '*.cpp' -o -name '*.hpp' \) | sort)
 TIDY_SOURCES = $(shell find src tests examples fuzz benchmarks -type f -name '*.cpp' | sort)
 
-.PHONY: check configure build test conformance examples bench demo fuzz format format-check filesize versions complexity coverage package-test tidy clean
+.PHONY: check configure build test conformance examples bench regression demo fuzz format format-check filesize versions complexity coverage package-test tidy clean
 
 check: versions format-check filesize complexity build test tidy
 
@@ -71,6 +71,11 @@ bench:
 	$(CMAKE) --build $(BENCH_DIR) --parallel
 	$(BENCH_DIR)/benchmarks/pain001_bench_client $(BENCH_ARGS)
 	$(BENCH_DIR)/benchmarks/pain001_bench_loopback $(BENCH_ARGS)
+
+# Everything against a real server, which it installs (pinned), starts
+# on a free loopback port and stops (scripts/regression.sh).
+regression:
+	./scripts/regression.sh
 
 # libFuzzer with ASan and UBSan, FUZZ_SECONDS per target. New inputs go
 # to $(FUZZ_DIR)/corpus, crash reproducers to $(FUZZ_DIR)/artifacts.

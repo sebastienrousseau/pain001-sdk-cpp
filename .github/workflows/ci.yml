@@ -45,6 +45,9 @@ jobs:
       - name: Version files agree
         run: make versions
 
+      - name: Shell scripts (shellcheck)
+        run: shellcheck scripts/*.sh scripts/verify-release-versions
+
       - name: Format and file size
         run: make format-check filesize CLANG_FORMAT=clang-format-18
 
@@ -201,3 +204,28 @@ jobs:
       - name: Server log
         if: failure()
         run: cat "$RUNNER_TEMP/server.log"
+
+  regression:
+    name: make regression (installs, starts and stops its own server)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      CXX: clang++-18
+      LLVM_COV: llvm-cov-18
+      LLVM_PROFDATA: llvm-profdata-18
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
+
+      - name: Install libcurl headers
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libcurl4-openssl-dev
+
+      - name: make regression
+        run: make regression CLANG_FORMAT=clang-format-18 CLANG_TIDY=clang-tidy-18
