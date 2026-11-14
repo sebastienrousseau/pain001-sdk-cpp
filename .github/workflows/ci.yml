@@ -229,3 +229,48 @@ jobs:
 
       - name: make regression
         run: make regression CLANG_FORMAT=clang-format-18 CLANG_TIDY=clang-tidy-18
+
+  api:
+    name: API breakage against the last tag
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Find the last release tag
+        id: baseline
+        run: |
+          tag=$(git describe --tags --abbrev=0 --match 'v*' HEAD 2>/dev/null || true)
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          if [ -z "$tag" ]; then
+            echo "No v* tag yet: the gate starts with the first release (docs/adr/0005)."
+            echo "Until then the check runs against main for information only."
+          fi
+
+      - name: Install abi-dumper, abi-compliance-checker and libcurl headers
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            abi-dumper abi-compliance-checker universal-ctags libcurl4-openssl-dev
+
+      - name: Source compatibility with the last tag (the gate)
+        if: steps.baseline.outputs.tag != ''
+        run: scripts/api-check.sh "${{ steps.baseline.outputs.tag }}"
+
+      # No tag yet: exercise the same check against main so the tooling is
+      # known to work before it gates; its result does not fail the job.
+      - name: Compatibility with main (informational, no tag yet)
+        if: steps.baseline.outputs.tag == ''
+        run: scripts/api-check.sh "$(git merge-base HEAD origin/main)" || echo "informational only"
+
+      - name: Upload the compatibility reports
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: api-check
+          path: build-api/
+          if-no-files-found: ignore
+          retention-days: 14
