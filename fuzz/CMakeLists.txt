@@ -24,14 +24,15 @@ foreach(name response error)
   if(PAIN001_SDK_FUZZ_ENGINE STREQUAL "libfuzzer")
     target_compile_options(${target} PRIVATE -fsanitize=fuzzer)
     target_link_options(${target} PRIVATE -fsanitize=fuzzer)
-    set(replay_args -runs=0)
+    set(replay ${target} -runs=0 ${CMAKE_CURRENT_SOURCE_DIR}/corpus/${name})
   else()
     target_sources(${target} PRIVATE standalone_main.cpp)
-    set(replay_args "")
+    set(replay ${CMAKE_COMMAND} -DFUZZER=$<TARGET_FILE:${target}>
+               -DCORPUS=${CMAKE_CURRENT_SOURCE_DIR}/corpus/${name}
+               -P ${CMAKE_CURRENT_SOURCE_DIR}/replay.cmake)
   endif()
   # The seed corpus doubles as a regression test under ctest.
   if(PAIN001_SDK_BUILD_TESTS)
-    add_test(NAME Fuzz.${name}.SeedCorpus
-             COMMAND ${target} ${replay_args} ${CMAKE_CURRENT_SOURCE_DIR}/corpus/${name})
+    add_test(NAME Fuzz.${name}.SeedCorpus COMMAND ${replay})
   endif()
 endforeach()
