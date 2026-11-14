@@ -17,6 +17,7 @@ option(PAIN001_SDK_BUILD_TESTS "Build the test suite" ${PAIN001_SDK_TOP_LEVEL})
 option(PAIN001_SDK_BUILD_EXAMPLES "Build the examples" ${PAIN001_SDK_TOP_LEVEL})
 option(PAIN001_SDK_WERROR "Treat compiler warnings as errors" OFF)
 option(PAIN001_SDK_BUILD_FUZZERS "Build the fuzz targets in fuzz/" OFF)
+option(PAIN001_SDK_BUILD_BENCHMARKS "Build the Google Benchmark targets in benchmarks/" OFF)
 option(PAIN001_SDK_INSTALL "Generate the install rules and CMake package config"
        ${PAIN001_SDK_TOP_LEVEL})
 
@@ -76,6 +77,10 @@ endif()
 
 if(PAIN001_SDK_BUILD_FUZZERS)
   add_subdirectory(fuzz)
+endif()
+
+if(PAIN001_SDK_BUILD_BENCHMARKS)
+  add_subdirectory(benchmarks)
 endif()
 
 # `cmake --install` puts the library, the public header and

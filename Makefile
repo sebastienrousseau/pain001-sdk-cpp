@@ -5,7 +5,8 @@
 # PAIN001_BASE_URL is set, and skip otherwise), and clang-tidy.
 # A missing clang-format or clang-tidy is reported and skipped locally;
 # CI always has both. The gate builds the fuzz targets with a replay main
-# and runs their seed corpus; `make fuzz` fuzzes them with libFuzzer
+# and runs their seed corpus, and builds the benchmarks without running
+# them (`make bench` runs them); `make fuzz` runs the fuzz targets under libFuzzer
 # (clang with the compiler-rt fuzzer runtime, not Apple clang).
 
 CMAKE        ?= cmake
@@ -23,20 +24,23 @@ FUZZ_FLAGS   ?= -fsanitize=address,undefined -fno-sanitize-recover=undefined
 FUZZ_TARGETS  = response error
 COV_DIR      ?= build-coverage
 PKG_DIR      ?= build-package
+BENCH_DIR    ?= build-bench
+BENCH_ARGS   ?=
 COV_FLAGS     = -fprofile-instr-generate -fcoverage-mapping
 LLVM_COV     ?= $(shell command -v llvm-cov 2>/dev/null || xcrun --find llvm-cov 2>/dev/null)
 LLVM_PROFDATA ?= $(shell command -v llvm-profdata 2>/dev/null || xcrun --find llvm-profdata 2>/dev/null)
 
-SOURCES = $(shell find include src tests examples fuzz -type f \( -name '*.cpp' -o -name '*.hpp' \) | sort)
-TIDY_SOURCES = $(shell find src tests examples fuzz -type f -name '*.cpp' | sort)
+SOURCES = $(shell find include src tests examples fuzz benchmarks -type f \( -name '*.cpp' -o -name '*.hpp' \) | sort)
+TIDY_SOURCES = $(shell find src tests examples fuzz benchmarks -type f -name '*.cpp' | sort)
 
-.PHONY: check configure build test conformance examples demo fuzz format format-check filesize versions complexity coverage package-test tidy clean
+.PHONY: check configure build test conformance examples bench demo fuzz format format-check filesize versions complexity coverage package-test tidy clean
 
 check: versions format-check filesize complexity build test tidy
 
 configure:
 	$(CMAKE) -S . -B $(BUILD_DIR) -DCMAKE_BUILD_TYPE=$(BUILD_TYPE) \
-	  -DPAIN001_SDK_WERROR=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=ON $(FUZZ_ARGS) $(CMAKE_ARGS)
+	  -DPAIN001_SDK_WERROR=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=ON $(FUZZ_ARGS) \
+	  -DPAIN001_SDK_BUILD_BENCHMARKS=ON $(CMAKE_ARGS)
 
 build: configure
 	$(CMAKE) --build $(BUILD_DIR) --parallel
@@ -56,6 +60,17 @@ conformance: build
 # been started with PAIN001_API_KEY (scripts/run-examples.sh).
 examples: build
 	./scripts/run-examples.sh $(BUILD_DIR)
+
+# Google Benchmark, Release build: the client's own cost per method (no
+# network), then a loopback round trip per method to PAIN001_BASE_URL
+# (skipped with a message when unset). CI passes a short BENCH_ARGS to
+# smoke-run them; nothing is asserted.
+bench:
+	$(CMAKE) -S . -B $(BENCH_DIR) -DCMAKE_BUILD_TYPE=Release -DPAIN001_SDK_BUILD_TESTS=OFF \
+	  -DPAIN001_SDK_BUILD_EXAMPLES=OFF -DPAIN001_SDK_BUILD_BENCHMARKS=ON $(CMAKE_ARGS)
+	$(CMAKE) --build $(BENCH_DIR) --parallel
+	$(BENCH_DIR)/benchmarks/pain001_bench_client $(BENCH_ARGS)
+	$(BENCH_DIR)/benchmarks/pain001_bench_loopback $(BENCH_ARGS)
 
 # libFuzzer with ASan and UBSan, FUZZ_SECONDS per target. New inputs go
 # to $(FUZZ_DIR)/corpus, crash reproducers to $(FUZZ_DIR)/artifacts.

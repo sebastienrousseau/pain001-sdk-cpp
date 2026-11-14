@@ -1,0 +1,1 @@
+{"success":false,"message":"Validation failed: 4/5 rows valid","filename":null,"xml":null,"validation_errors":[{"field":"$.currency","message":"'EURO' does not match '^[A-Z]{3}$'","value":"EURO"}],"scheme_violations":[]}
