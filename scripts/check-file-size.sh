@@ -15,5 +15,5 @@ while IFS= read -r file; do
     echo "$file: $lines lines (limit $limit)"
     status=1
   fi
-done < <(find include src tests examples -type f \( -name '*.cpp' -o -name '*.hpp' \) | sort)
+done < <(find include src tests examples fuzz -type f \( -name '*.cpp' -o -name '*.hpp' \) | sort)
 exit "$status"

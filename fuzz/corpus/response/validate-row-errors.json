@@ -1,0 +1,1 @@
+{"is_valid":false,"total_rows":2,"errors":[{"field":"creditor_account_IBAN","message":"not a valid IBAN","value":"DE00"},{"field":"payment_amount","message":"required"}]}

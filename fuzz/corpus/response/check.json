@@ -1,0 +1,1 @@
+{"message_type":"pain.001.001.09","passed":false,"errors":1,"warnings":0,"rungs":["xsd"],"findings":[{"rung":"xsd","rule":"r","severity":"error","message":"m","location":null}]}
