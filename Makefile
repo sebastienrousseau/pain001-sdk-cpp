@@ -12,6 +12,7 @@ CMAKE        ?= cmake
 CTEST        ?= ctest
 CLANG_FORMAT ?= clang-format
 CLANG_TIDY   ?= clang-tidy
+RCA          ?= rust-code-analysis-cli
 BUILD_DIR    ?= build
 BUILD_TYPE   ?= Debug
 CMAKE_ARGS   ?=
@@ -24,9 +25,9 @@ FUZZ_TARGETS  = response error
 SOURCES = $(shell find include src tests examples fuzz -type f \( -name '*.cpp' -o -name '*.hpp' \) | sort)
 TIDY_SOURCES = $(shell find src tests examples fuzz -type f -name '*.cpp' | sort)
 
-.PHONY: check configure build test conformance demo fuzz format format-check filesize versions tidy clean
+.PHONY: check configure build test conformance demo fuzz format format-check filesize versions complexity tidy clean
 
-check: versions format-check filesize build test tidy
+check: versions format-check filesize complexity build test tidy
 
 configure:
 	$(CMAKE) -S . -B $(BUILD_DIR) -DCMAKE_BUILD_TYPE=$(BUILD_TYPE) \
@@ -91,6 +92,13 @@ filesize:
 
 versions:
 	./scripts/verify-release-versions
+
+# Cyclomatic 10, cognitive 15, Halstead difficulty 30, 60 lines per
+# function (rust-code-analysis-cli 0.0.25; CI always has it).
+complexity:
+	@if command -v $(RCA) >/dev/null 2>&1; then \
+	  python3 scripts/check-complexity.py --rca $(RCA); \
+	else echo "$(RCA) not found: complexity check skipped (CI runs it)"; fi
 
 tidy: configure
 	@if command -v $(CLANG_TIDY) >/dev/null 2>&1; then \

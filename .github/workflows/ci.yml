@@ -1,8 +1,9 @@
 # SPDX-License-Identifier: Apache-2.0 OR MIT
 #
-# Lint (clang-format, file size, clang-tidy with the complexity
-# ceilings), build and unit tests on GCC and Clang (Clang with ASan and
-# UBSan), and the conformance kit against a live `pain001 serve`.
+# Lint (version files, clang-format, file size, the complexity ceilings
+# measured by rust-code-analysis, and clang-tidy), build and unit tests
+# on GCC and Clang (Clang with ASan and UBSan), and the conformance kit
+# against a live `pain001 serve`.
 name: CI
 
 on:
@@ -46,6 +47,20 @@ jobs:
 
       - name: Format and file size
         run: make format-check filesize CLANG_FORMAT=clang-format-18
+
+      - name: Cache rust-code-analysis-cli
+        id: rca-cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cargo/bin/rust-code-analysis-cli
+          key: rca-0.0.25-${{ runner.os }}
+
+      - name: Install rust-code-analysis-cli
+        if: steps.rca-cache.outputs.cache-hit != 'true'
+        run: cargo install rust-code-analysis-cli --version 0.0.25 --locked
+
+      - name: Complexity ceilings (cyclomatic, cognitive, Halstead, lines)
+        run: make complexity
 
       - name: clang-tidy (bugprone, performance, complexity ceilings)
         run: make tidy CLANG_TIDY=clang-tidy-18
