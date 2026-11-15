@@ -8,6 +8,8 @@ advance in `0.0.1` steps in lockstep with the pain001 suite.
 
 ## [Unreleased]
 
+## [0.0.89] - Unreleased
+
 ### Fixed
 
 - The release notes' Checksums block lists `SHA256SUMS` itself, as
