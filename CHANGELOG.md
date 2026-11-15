@@ -18,7 +18,7 @@ advance in `0.0.1` steps in lockstep with the pain001 suite.
 
 ## [0.0.88] - 2026-11-14
 
-The first release will be 0.0.88, in lockstep with the pain001 suite.
+The first release, in lockstep with the pain001 suite.
 
 ### Added
 
