@@ -10,6 +10,11 @@ advance in `0.0.1` steps in lockstep with the pain001 suite.
 
 ## [0.0.89] - Unreleased
 
+### Changed
+
+- Version 0.0.89 in every version-bearing file, in lockstep with the
+  pain001 suite; `kSdkVersion`, and so the `User-Agent`, follow.
+
 ### Fixed
 
 - The release notes' Checksums block lists `SHA256SUMS` itself, as

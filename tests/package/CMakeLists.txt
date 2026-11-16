@@ -6,7 +6,7 @@
 cmake_minimum_required(VERSION 3.20)
 project(pain001_sdk_consumer LANGUAGES CXX)
 
-find_package(pain001_sdk 0.0.88 CONFIG REQUIRED)
+find_package(pain001_sdk 0.0.89 CONFIG REQUIRED)
 
 add_executable(consumer main.cpp)
 target_link_libraries(consumer PRIVATE pain001::sdk)

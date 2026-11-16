@@ -15,12 +15,12 @@ include(FetchContent)
 FetchContent_Declare(
   pain001_sdk
   GIT_REPOSITORY https://github.com/sebastienrousseau/pain001-sdk-cpp.git
-  GIT_TAG        v0.0.88)
+  GIT_TAG        v0.0.89)
 FetchContent_MakeAvailable(pain001_sdk)
 target_link_libraries(your_app PRIVATE pain001::sdk)
 ```
 
-Or install it and use `find_package(pain001_sdk 0.0.88 CONFIG)`; see
+Or install it and use `find_package(pain001_sdk 0.0.89 CONFIG)`; see
 [Packaging](packaging.md).
 
 ## Quick start
