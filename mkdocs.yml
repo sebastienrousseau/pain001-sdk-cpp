@@ -72,6 +72,7 @@ nav:
       - adr/0005-source-compatibility-not-abi-stability.md
       - adr/0006-cmake-package-no-registry-yet.md
   - Releases:
+      - 0.0.89: releases/0.0.89.md
       - 0.0.88: releases/0.0.88.md
   - Project:
       - README: https://github.com/sebastienrousseau/pain001-sdk-cpp/blob/main/README.md

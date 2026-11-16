@@ -8,10 +8,15 @@ advance in `0.0.1` steps in lockstep with the pain001 suite.
 
 ## [Unreleased]
 
-## [0.0.89] - Unreleased
+## [0.0.89] - 2026-11-16
+
+In lockstep with pain001 0.0.89.
 
 ### Changed
 
+- CI tests against pain001 0.0.89, the release this SDK ships with
+  (`ci/server-requirements.in`). The vendored conformance kit is
+  unchanged from 0.0.88.
 - Version 0.0.89 in every version-bearing file, in lockstep with the
   pain001 suite; `kSdkVersion`, and so the `User-Agent`, follow.
 
