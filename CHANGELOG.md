@@ -10,6 +10,11 @@ advance in `0.0.1` steps in lockstep with the pain001 suite.
 
 ### Changed
 
+- CI tests against pain001 0.0.90 (`ci/server-requirements.in`), which
+  fixes a race in core's `lazy_module` that made a freshly started
+  `pain001 serve` answer its first parallel requests with HTTP 500.
+  The vendored conformance kit is unchanged: core's `conformance/` is
+  identical between 0.0.88 and 0.0.90.
 - Version 0.0.90 in every version-bearing file, in lockstep with the
   pain001 suite; `kSdkVersion`, and so the `User-Agent`, follow.
 
