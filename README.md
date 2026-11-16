@@ -92,9 +92,8 @@ target_link_libraries(your_app PRIVATE pain001::sdk)
 
 Each GitHub release carries the source archive, a CycloneDX SBOM,
 `SHA256SUMS` and a build provenance attestation. The first tagged
-release is 0.0.88, in lockstep with the pain001 suite; until its tag is
-published, pin a commit SHA instead. There is no vcpkg or Conan package
-yet ([`docs/packaging.md`](docs/packaging.md)).
+release was 0.0.88, in lockstep with the pain001 suite. There is no
+vcpkg or Conan package yet ([`docs/packaging.md`](docs/packaging.md)).
 
 ---
 
