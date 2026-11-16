@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0 OR MIT
 cmake_minimum_required(VERSION 3.20)
 
-project(pain001_sdk VERSION 0.0.88 DESCRIPTION "C++ client for the pain001 REST API" LANGUAGES CXX)
+project(pain001_sdk VERSION 0.0.89 DESCRIPTION "C++ client for the pain001 REST API" LANGUAGES CXX)
 
 include(FetchContent)
 include(GNUInstallDirs)
@@ -85,7 +85,7 @@ endif()
 
 # `cmake --install` puts the library, the public header and
 # lib/cmake/pain001_sdk/ (package config, targets, version) under the
-# prefix, so a consumer writes find_package(pain001_sdk 0.0.88 CONFIG)
+# prefix, so a consumer writes find_package(pain001_sdk 0.0.89 CONFIG)
 # and links pain001::sdk. Every 0.0.x release may break the API, so the
 # version file accepts the exact version only.
 if(PAIN001_SDK_INSTALL)

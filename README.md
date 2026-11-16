@@ -66,7 +66,7 @@ include(FetchContent)
 FetchContent_Declare(
   pain001_sdk
   GIT_REPOSITORY https://github.com/sebastienrousseau/pain001-sdk-cpp.git
-  GIT_TAG        v0.0.88)
+  GIT_TAG        v0.0.89)
 FetchContent_MakeAvailable(pain001_sdk)
 
 target_link_libraries(your_app PRIVATE pain001::sdk)
@@ -86,15 +86,14 @@ cmake --install build --prefix /opt/pain001
 ```
 
 ```cmake
-find_package(pain001_sdk 0.0.88 CONFIG REQUIRED)  # with CMAKE_PREFIX_PATH=/opt/pain001
+find_package(pain001_sdk 0.0.89 CONFIG REQUIRED)  # with CMAKE_PREFIX_PATH=/opt/pain001
 target_link_libraries(your_app PRIVATE pain001::sdk)
 ```
 
 Each GitHub release carries the source archive, a CycloneDX SBOM,
 `SHA256SUMS` and a build provenance attestation. The first tagged
-release is 0.0.88, in lockstep with the pain001 suite; until its tag is
-published, pin a commit SHA instead. There is no vcpkg or Conan package
-yet ([`docs/packaging.md`](docs/packaging.md)).
+release was 0.0.88, in lockstep with the pain001 suite. There is no
+vcpkg or Conan package yet ([`docs/packaging.md`](docs/packaging.md)).
 
 ---
 

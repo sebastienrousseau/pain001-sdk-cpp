@@ -12,6 +12,13 @@
 # Needs: git history with tags (fetch-depth 0), gh with GH_TOKEN.
 # Usage: scripts/release-notes.sh <version> <dist-dir> [ref]
 set -euo pipefail
+
+# SHA256SUMS is attached too, so its own hash belongs in the block.
+sums_self() {
+  local h
+  h=$( (sha256sum "$1" 2>/dev/null || shasum -a 256 "$1") | cut -d" " -f1)
+  printf "%s  SHA256SUMS\n" "$h"
+}
 cd "$(dirname "$0")/.."
 
 version=${1:?usage: scripts/release-notes.sh <version> <dist-dir> [ref]}
@@ -69,6 +76,7 @@ done <<< "$prs"
   echo
   echo '```text'
   cat "$dist/SHA256SUMS"
+  sums_self "$dist/SHA256SUMS"
   echo '```'
   echo
   if [ -n "$previous" ]; then
