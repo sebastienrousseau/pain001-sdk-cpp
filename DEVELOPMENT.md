@@ -108,7 +108,7 @@ pain001 suite ([AGENTS.md](AGENTS.md)). A release is prepared on
    nothing.
 3. **Tag**: the maintainer pushes a signed, annotated tag whose message
    is `pain001-sdk-cpp v<version>`:
-   `git tag -s v0.0.89 -m "pain001-sdk-cpp v0.0.89" && git push origin v0.0.89`.
+   `git tag -s v0.0.90 -m "pain001-sdk-cpp v0.0.90" && git push origin v0.0.90`.
 4. **Release**: the tag triggers `release.yml`. It checks the tag
    message and the version files, runs the tests and the package test,
    builds `pain001-sdk-cpp-<version>.tar.gz` (`git archive`), the

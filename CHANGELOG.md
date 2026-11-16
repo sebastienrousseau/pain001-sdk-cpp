@@ -8,6 +8,11 @@ advance in `0.0.1` steps in lockstep with the pain001 suite.
 
 ## [Unreleased]
 
+### Changed
+
+- Version 0.0.90 in every version-bearing file, in lockstep with the
+  pain001 suite; `kSdkVersion`, and so the `User-Agent`, follow.
+
 ## [0.0.89] - 2026-11-16
 
 In lockstep with pain001 0.0.89.

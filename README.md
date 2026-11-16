@@ -66,7 +66,7 @@ include(FetchContent)
 FetchContent_Declare(
   pain001_sdk
   GIT_REPOSITORY https://github.com/sebastienrousseau/pain001-sdk-cpp.git
-  GIT_TAG        v0.0.89)
+  GIT_TAG        v0.0.90)
 FetchContent_MakeAvailable(pain001_sdk)
 
 target_link_libraries(your_app PRIVATE pain001::sdk)
@@ -86,7 +86,7 @@ cmake --install build --prefix /opt/pain001
 ```
 
 ```cmake
-find_package(pain001_sdk 0.0.89 CONFIG REQUIRED)  # with CMAKE_PREFIX_PATH=/opt/pain001
+find_package(pain001_sdk 0.0.90 CONFIG REQUIRED)  # with CMAKE_PREFIX_PATH=/opt/pain001
 target_link_libraries(your_app PRIVATE pain001::sdk)
 ```
 
