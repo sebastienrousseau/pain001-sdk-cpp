@@ -8,10 +8,25 @@ advance in `0.0.1` steps in lockstep with the pain001 suite.
 
 ## [Unreleased]
 
+In lockstep with pain001 0.0.91. The vendored conformance kit is
+unchanged: core's `conformance/` is identical between 0.0.90 and 0.0.91.
+CI moves to the pain001 0.0.91 server once it is on PyPI.
+
 ### Changed
 
 - Version 0.0.91 in every version-bearing file, in lockstep with the
   pain001 suite; `kSdkVersion`, and so the `User-Agent`, follow.
+- CI actions: `github/codeql-action` 4.39.4 and `ossf/scorecard-action`
+  2.6.0, each pinned by commit SHA.
+- Dependabot now watches `docs/requirements.txt`, the manual's
+  hash-locked MkDocs build, which it had not covered.
+
+### Security
+
+- The manual builds with mkdocs-material 9.8.2 (from 9.7.7), which
+  fixes GHSA-wxw8-4jgj-q85j in its privacy plugin, and
+  pymdown-extensions 13.1.2; `docs/requirements.in` now requires
+  pymdown-extensions `>=13.1.1`.
 
 ## [0.0.90] - 2026-11-16
 
