@@ -6,9 +6,14 @@ What may come next, and what would decide it. Nothing here is a
 commitment or has a date; the SDK moves with the pain001 suite, one
 `0.0.x` step at a time. Items are added here before they become work.
 
-## In 0.0.90 (this release)
+## In 0.0.91 (this release)
 
-- In lockstep with pain001 0.0.90: CI tests against it, a server that
+- In lockstep with pain001 0.0.91: CI tests against it once core
+  0.0.91 is on PyPI, and the vendored conformance kit is unchanged.
+
+## Done in 0.0.90 (released 2026-11-16)
+
+- In lockstep with pain001 0.0.90: CI tested against it, a server that
   no longer answers its first parallel requests with HTTP 500.
 
 ## Done in 0.0.89 (released 2026-11-16)

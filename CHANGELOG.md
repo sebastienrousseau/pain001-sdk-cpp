@@ -6,6 +6,13 @@ All notable changes to this project are recorded here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions
 advance in `0.0.1` steps in lockstep with the pain001 suite.
 
+## [Unreleased]
+
+### Changed
+
+- Version 0.0.91 in every version-bearing file, in lockstep with the
+  pain001 suite; `kSdkVersion`, and so the `User-Agent`, follow.
+
 ## [0.0.90] - 2026-11-16
 
 In lockstep with pain001 0.0.90.

@@ -4,7 +4,7 @@
 # `make docs` before MkDocs builds the manual. Every public member must
 # be documented: a warning fails the build.
 PROJECT_NAME           = pain001-sdk-cpp
-PROJECT_NUMBER         = 0.0.90
+PROJECT_NUMBER         = 0.0.91
 PROJECT_BRIEF          = "A typed C++17 client for the pain001 REST API"
 INPUT                  = include/pain001/client.hpp
 OUTPUT_DIRECTORY       = docs

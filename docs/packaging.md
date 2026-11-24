@@ -17,12 +17,12 @@ recorded in [ADR 0006](adr/0006-cmake-package-no-registry-yet.md).
 ## Consuming a release
 
 ```sh
-curl -LO https://github.com/sebastienrousseau/pain001-sdk-cpp/releases/download/v0.0.90/pain001-sdk-cpp-0.0.90.tar.gz
-curl -LO https://github.com/sebastienrousseau/pain001-sdk-cpp/releases/download/v0.0.90/SHA256SUMS
+curl -LO https://github.com/sebastienrousseau/pain001-sdk-cpp/releases/download/v0.0.91/pain001-sdk-cpp-0.0.91.tar.gz
+curl -LO https://github.com/sebastienrousseau/pain001-sdk-cpp/releases/download/v0.0.91/SHA256SUMS
 sha256sum --check --ignore-missing SHA256SUMS
-gh attestation verify pain001-sdk-cpp-0.0.90.tar.gz --repo sebastienrousseau/pain001-sdk-cpp
-tar xzf pain001-sdk-cpp-0.0.90.tar.gz
-cmake -S pain001-sdk-cpp-0.0.90 -B build -DCMAKE_BUILD_TYPE=Release
+gh attestation verify pain001-sdk-cpp-0.0.91.tar.gz --repo sebastienrousseau/pain001-sdk-cpp
+tar xzf pain001-sdk-cpp-0.0.91.tar.gz
+cmake -S pain001-sdk-cpp-0.0.91 -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build
 cmake --install build --prefix /opt/pain001
 ```
@@ -30,7 +30,7 @@ cmake --install build --prefix /opt/pain001
 Then, in the consuming project:
 
 ```cmake
-find_package(pain001_sdk 0.0.90 CONFIG REQUIRED)  # CMAKE_PREFIX_PATH=/opt/pain001
+find_package(pain001_sdk 0.0.91 CONFIG REQUIRED)  # CMAKE_PREFIX_PATH=/opt/pain001
 target_link_libraries(your_app PRIVATE pain001::sdk)
 ```
 
