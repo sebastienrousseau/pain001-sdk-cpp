@@ -11,8 +11,8 @@ release of this SDK.
 
 | Version | Status | Receives security fixes? |
 | :--- | :--- | :--- |
-| `0.0.90` (latest) | Current | ✅ Yes |
-| `0.0.89` | Prior | ❌ No |
+| `0.0.91` (latest) | Current | ✅ Yes |
+| `0.0.90` | Prior | ❌ No |
 | `main` | In development | ✅ Yes |
 
 ## Reporting a vulnerability

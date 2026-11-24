@@ -20,8 +20,8 @@ tested against `pain001 serve` 0.0.N.
 
 | Version | Status | Supported |
 | :--- | :--- | :--- |
-| `0.0.90` (latest) | Current | ✅ Yes |
-| `0.0.89` | Prior | ❌ No |
+| `0.0.91` (latest) | Current | ✅ Yes |
+| `0.0.90` | Prior | ❌ No |
 | `main` | In development | ✅ Yes |
 
 ## Questions and bugs
