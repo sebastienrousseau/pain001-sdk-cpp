@@ -2,8 +2,8 @@
 #
 # Dependabot has no CMake FetchContent ecosystem, so the nlohmann/json
 # and GoogleTest pins in CMakeLists.txt and tests/CMakeLists.txt are
-# reviewed by hand. It does track the workflow actions and the server
-# the conformance job installs.
+# reviewed by hand. It does track the workflow actions, the server the
+# conformance job installs, and the manual's MkDocs build inputs.
 version: 2
 updates:
   - package-ecosystem: "github-actions"
@@ -21,6 +21,19 @@ updates:
 
   - package-ecosystem: "pip"
     directory: "/ci"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    labels:
+      - "dependencies"
+      - "automated"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+
+  # The manual's build inputs (MkDocs Material), hash-locked.
+  - package-ecosystem: "pip"
+    directory: "/docs"
     schedule:
       interval: "weekly"
       day: "monday"
