@@ -346,9 +346,9 @@ opentelemetry-api==1.45.2 \
     # via
     #   fastapi
     #   pain001
-pain001==0.0.90 \
-    --hash=sha256:460def405e6ad28973e3b00da366774f5da82f619e834c9b4d48e54d9967c885 \
-    --hash=sha256:b69a310eff4198bee51e61f37487ec4c24d23d6a5219f57b512215925fdbbd38
+pain001==0.0.91 \
+    --hash=sha256:6bec12a3284c4d5eb9e5ecb2e7db94df6127ba0337d9451fde8c0c6c2d549f06 \
+    --hash=sha256:bb9deec8887a4abd395d3fb450605c03f2c5282cade88edc553cc882bfb6f36b
     # via -r ci/server-requirements.in
 pydantic==2.14.3 \
     --hash=sha256:1054f237f4d4733e5a30e1e2333bd33a2004ab9ab1510bd053a9a31bb48e232d \
