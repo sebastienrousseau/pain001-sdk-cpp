@@ -6,10 +6,11 @@ What may come next, and what would decide it. Nothing here is a
 commitment or has a date; the SDK moves with the pain001 suite, one
 `0.0.x` step at a time. Items are added here before they become work.
 
-## In 0.0.91 (this release)
+## Done in 0.0.91 (released 2026-11-25)
 
-- In lockstep with pain001 0.0.91: CI tests against it once core
-  0.0.91 is on PyPI, and the vendored conformance kit is unchanged.
+- In lockstep with pain001 0.0.91: CI tests against it, and the
+  vendored conformance kit is unchanged.
+- The manual builds with mkdocs-material 9.8.2 (GHSA-wxw8-4jgj-q85j).
 
 ## Done in 0.0.90 (released 2026-11-16)
 
